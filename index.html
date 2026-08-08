@@ -1,1184 +1,270 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VFP Play</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #5b21b6;
-      --primary-dark: #3b0764;
-      --primary-mid: #7c3aed;
-      --primary-light: #a78bfa;
-      --accent: #1d4ed8;
-      --accent2: #3b82f6;
-      --bg: #000000;
-      --bg-card: #0d0d1a;
-      --text: #ffffff;
-      --muted: #9ca3af;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Gerador de Overlay</title>
+<style>
+  :root {
+    --pink: #FF3CAC;
+    --purple: #784BA0;
+    --yellow: #FFD93D;
+    --white: #FFFFFF;
+    --dark: #1a0b2e;
+    --dark-light: #2d1454;
+  }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 20px;
+    background: #0f061b;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--white);
+  }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+  #setup-panel {
+    max-width: 440px;
+    margin: 20px auto;
+    padding: 24px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--dark), var(--dark-light));
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,255,255,0.1);
+    box-sizing: border-box;
+  }
 
-    /* NAV */
-    nav {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 32px;
-    }
+  #setup-panel h2 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: var(--yellow);
+  }
 
-    .nav-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(91,33,182,0.7);
-      color: #fff;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 10px 20px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .nav-btn:hover { background: var(--primary-mid); }
-    .nav-btn svg { width: 16px; height: 16px; fill: currentColor; }
+  #setup-panel p.desc {
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.4;
+  }
 
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .nav-btn-likes { background: linear-gradient(135deg, #FF3CAC, #784BA0); }
-    .nav-btn-likes:hover { filter: brightness(1.1); background: linear-gradient(135deg, #FF3CAC, #784BA0); }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin: 16px 0 8px;
+  }
 
-    /* ===================== LIKES PAGE ===================== */
-    #page-likes { display: none; }
-    .likes-cards {
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 24px;
-    }
-    .likes-card {
-      background: linear-gradient(135deg, rgba(91,33,182,0.85) 0%, rgba(59,7,100,0.9) 100%);
-      border: 1px solid rgba(124,58,237,0.4);
-      border-radius: 14px;
-      padding: 28px 24px;
-      width: 260px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      text-decoration: none;
-      color: #fff;
-      transition: all 0.25s;
-      backdrop-filter: blur(8px);
-    }
-    .likes-card:hover {
-      background: linear-gradient(135deg, rgba(124,58,237,0.9) 0%, rgba(91,33,182,0.95) 100%);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(91,33,182,0.6);
-    }
-    .likes-card-emoji { font-size: 44px; margin-bottom: 12px; }
-    .likes-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
-    .likes-card p { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; margin-bottom: 14px; }
-    .likes-card-actions { display: flex; gap: 8px; }
-    .likes-card .likes-card-btn {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .likes-card .likes-card-btn:hover { background: rgba(255,255,255,0.22); }
-    .likes-card .likes-card-btn.primary {
-      background: linear-gradient(135deg, #FF3CAC, #784BA0);
-      border: none;
-    }
-    .likes-note {
-      max-width: 560px;
-      margin: 28px auto 0;
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-      padding: 0 16px;
-    }
-    .likes-note a { color: #a78bfa; }
+  .overlay-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
 
-    @media (max-width: 480px) {
-      .nav-right { gap: 6px; }
-      .nav-btn-likes span { display: none; }
-    }
+  .overlay-option {
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
 
-    /* ===================== HOME PAGE ===================== */
-    #page-home { display: block; }
+  .overlay-option.active {
+    border-color: var(--yellow);
+    background: linear-gradient(135deg, rgba(255,60,172,0.25), rgba(120,75,160,0.25));
+  }
 
-    .hero-banner {
-      position: relative;
-      width: 100%;
-      min-height: 70vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
 
-    .hero-banner-img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.4);
+    color: var(--white);
+    font-size: 13px;
+  }
 
-    .hero-banner-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to bottom,
-        rgba(0,0,0,0.35) 0%,
-        rgba(0,0,0,0.15) 40%,
-        rgba(0,0,0,0.7) 100%
-      );
-    }
+  .boss-extra-config {
+    display: flex;
+    gap: 10px;
+  }
 
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      padding: 60px 20px 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+  .boss-extra-config > div {
+    flex: 1;
+  }
 
-    .logo-main {
-      font-size: clamp(64px, 14vw, 110px);
-      font-weight: 900;
-      letter-spacing: -2px;
-      line-height: 0.9;
-      background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 40%, #3b82f6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      filter: drop-shadow(0 4px 30px rgba(91,33,182,0.9));
-      font-style: italic;
-    }
+  #btn-generate {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    color: var(--white);
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
 
-    .logo-sub {
-      font-size: clamp(34px, 8vw, 64px);
-      font-weight: 900;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      font-style: italic;
-    }
+  #result-box {
+    display: none;
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 10px;
+    border: 1px solid var(--pink);
+  }
 
-    .action-cards {
-      position: relative;
-      z-index: 3;
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 0 20px;
-      margin-top: -40px;
-    }
+  #result-url {
+    word-break: break-all;
+    font-size: 11px;
+    color: var(--yellow);
+    margin-bottom: 8px;
+  }
 
-    .action-card {
-      background: linear-gradient(135deg, rgba(91,33,182,0.85) 0%, rgba(59,7,100,0.9) 100%);
-      border: 1px solid rgba(124,58,237,0.4);
-      border-radius: 12px;
-      padding: 32px 40px;
-      width: 240px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      cursor: pointer;
-      text-decoration: none;
-      color: #fff;
-      transition: all 0.25s;
-      backdrop-filter: blur(8px);
-    }
-
-    .action-card:hover {
-      background: linear-gradient(135deg, rgba(124,58,237,0.9) 0%, rgba(91,33,182,0.95) 100%);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(91,33,182,0.6);
-    }
-
-    .action-card-icon { width: 48px; height: 48px; margin-bottom: 16px; }
-    .action-card-icon svg { width: 100%; height: 100%; }
-    .action-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .action-card p { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
-
-    footer {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 40px 20px 24px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    footer span { color: #f472b6; }
-
-    /* ===================== TUTORIAL PAGE ===================== */
-    #page-tutorial { display: none; }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(91,33,182,0.25) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .container {
-      position: relative; z-index: 1;
-      max-width: 720px; margin: 0 auto;
-      padding: 20px 20px 40px;
-    }
-
-    .container h1 {
-      text-align: center;
-      font-size: clamp(26px, 5vw, 42px);
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: var(--muted);
-      font-size: 15px;
-      margin-bottom: 32px;
-    }
-
-    .progress-wrap { margin-bottom: 24px; }
-    .progress-label {
-      display: flex; justify-content: space-between;
-      font-size: 13px; color: var(--muted);
-      margin-bottom: 8px;
-    }
-    .progress-track {
-      width: 100%; height: 8px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 99px; overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--primary-mid), var(--accent));
-      border-radius: 99px;
-      transition: width 0.4s ease;
-    }
-
-    .step-card {
-      background: linear-gradient(135deg, rgba(91,33,182,0.5) 0%, rgba(59,7,100,0.6) 100%);
-      border: 1px solid rgba(124,58,237,0.35);
-      border-radius: 16px;
-      padding: 32px;
-      margin-bottom: 20px;
-    }
-    .step-card h2 {
-      text-align: center;
-      font-size: 20px; font-weight: 700;
-      margin-bottom: 20px; color: #e9d5ff;
-    }
-
-    .select-wrapper { position: relative; }
-    .custom-select {
-      width: 100%;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(124,58,237,0.5);
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      padding: 14px 48px 14px 16px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      user-select: none;
-    }
-    .custom-select:hover { border-color: var(--primary-light); }
-    .custom-select svg { width: 20px; height: 20px; fill: #a78bfa; transition: transform 0.2s; flex-shrink: 0; }
-    .custom-select.open svg { transform: rotate(180deg); }
-    .select-display { display: flex; align-items: center; gap: 10px; flex: 1; }
-    .select-placeholder { color: #9ca3af; }
-
-    .dropdown {
-      display: none;
-      position: absolute;
-      top: calc(100% + 4px); left: 0; right: 0;
-      background: #1a0a2e;
-      border: 1px solid rgba(124,58,237,0.5);
-      border-radius: 10px;
-      overflow: hidden; z-index: 50;
-      max-height: 260px; overflow-y: auto;
-    }
-    .dropdown.open { display: block; }
-
-    .dropdown-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 16px; cursor: pointer;
-      transition: background 0.15s;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .dropdown-item:last-child { border-bottom: none; }
-    .dropdown-item:hover { background: rgba(124,58,237,0.25); }
-    .dropdown-item.selected { background: rgba(124,58,237,0.3); }
-
-    .item-icon {
-      width: 36px; height: 36px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
-    }
-    .item-info .item-name { font-weight: 600; font-size: 15px; }
-    .item-info .item-sub { font-size: 12px; color: #a78bfa; margin-top: 2px; }
-
-    .hint-text { text-align: center; margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.6); }
-    .hint-text strong { color: #e9d5ff; }
-
-    .btn-row { display: flex; gap: 12px; }
-    .btn-back {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,0.08); color: #fff; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500;
-      padding: 14px 24px; border-radius: 10px;
-      transition: background 0.2s; text-decoration: none; flex-shrink: 0;
-    }
-    .btn-back:hover { background: rgba(255,255,255,0.14); }
-    .btn-back svg { width: 18px; height: 18px; fill: currentColor; }
-
-    .btn-next {
-      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      background: rgba(91,33,182,0.4); color: rgba(255,255,255,0.5);
-      border: none; cursor: not-allowed;
-      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
-      padding: 14px 24px; border-radius: 10px; transition: all 0.2s;
-    }
-    .btn-next.active {
-      background: linear-gradient(90deg, var(--primary-mid), var(--accent));
-      color: #fff; cursor: pointer;
-      box-shadow: 0 4px 20px rgba(91,33,182,0.5);
-    }
-    .btn-next.active:hover { filter: brightness(1.1); transform: translateY(-1px); }
-    .btn-next svg { width: 18px; height: 18px; fill: currentColor; }
-
-    .result-header {
-      display: flex; align-items: center; gap: 14px;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;
-    }
-    .result-app-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
-    }
-    .result-app-name { font-size: 18px; font-weight: 700; }
-    .result-app-method { font-size: 13px; color: #a78bfa; margin-top: 2px; }
-
-    .info-box {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(124,58,237,0.3);
-      border-radius: 12px; padding: 20px; margin-bottom: 20px;
-    }
-    .info-box-title {
-      display: flex; align-items: center; gap: 8px;
-      font-weight: 600; font-size: 14px; color: #a78bfa;
-      margin-bottom: 16px; padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .info-box-title svg { width: 16px; height: 16px; fill: currentColor; }
-    .info-field { margin-bottom: 16px; }
-    .info-field:last-child { margin-bottom: 0; }
-    .info-field label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
-    .info-field-value {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 20px; font-weight: 700; color: #fff; gap: 8px;
-    }
-    .info-field-value.small { font-size: 14px; font-weight: 400; word-break: break-all; }
-
-    .copy-btn {
-      background: none; border: none; cursor: pointer;
-      color: #a78bfa; padding: 4px; flex-shrink: 0; transition: color 0.2s;
-    }
-    .copy-btn:hover { color: #fff; }
-    .copy-btn svg { width: 18px; height: 18px; fill: currentColor; display: block; }
-    .copy-btn.copied { color: #4ade80; }
-
-    .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 12px 0; }
-
-    .tutorial-box {
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(124,58,237,0.25);
-      border-radius: 12px; overflow: hidden; margin-bottom: 20px;
-    }
-    .tutorial-box-title {
-      background: rgba(91,33,182,0.3); padding: 14px 20px;
-      font-weight: 700; font-size: 15px; color: #c4b5fd;
-      border-bottom: 1px solid rgba(124,58,237,0.25);
-    }
-    .tutorial-steps-list { padding: 0 20px 20px; }
-    .t-step { padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
-    .t-step:last-child { border-bottom: none; }
-    .t-step-num { font-size: 12px; font-weight: 700; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .t-step-text { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.85); }
-    .t-step-text strong { color: #c4b5fd; }
-    .t-step-text a { color: #a78bfa; }
-    .t-step-img {
-      width: 100%; max-width: 100%; border-radius: 8px; margin-top: 12px;
-      border: 1px solid rgba(255,255,255,0.1); background: #1a1a2e; overflow: hidden;
-    }
-
-    .downloader-mock {
-      background: #2d1b00; border-radius: 8px; overflow: hidden;
-      margin-top: 12px; border: 1px solid rgba(255,255,255,0.1);
-    }
-    .mock-sidebar { display: flex; }
-    .mock-nav { background: #e88e14; width: 110px; padding: 12px 0; flex-shrink: 0; }
-    .mock-nav-item { padding: 10px 14px; font-size: 12px; color: rgba(255,255,255,0.8); cursor: pointer; }
-    .mock-nav-item.active { background: rgba(0,0,0,0.2); color: #fff; font-weight: 600; }
-    .mock-content { flex: 1; padding: 14px; background: #1a1a1a; }
-    .mock-logo { font-size: 16px; font-weight: 800; color: #e88e14; margin-bottom: 10px; }
-    .mock-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .mock-input {
-      flex: 1; background: #2a2a2a; border: 1px solid #444;
-      border-radius: 4px; padding: 8px 10px; color: #ccc; font-size: 12px;
-    }
-    .mock-go-btn {
-      background: #e88e14; color: #fff; border: none; border-radius: 4px;
-      padding: 8px 16px; font-size: 12px; font-weight: 700; cursor: pointer;
-    }
-    .arrow-label { display: flex; align-items: flex-start; gap: 12px; margin-top: 8px; }
-    .arrow-text { font-size: 12px; color: #ef4444; font-weight: 600; line-height: 1.4; }
-
-    .video-tabs { display: flex; gap: 0; margin-bottom: 0; }
-    .video-tab {
-      flex: 1; padding: 10px 8px; text-align: center;
-      font-size: 13px; font-weight: 500;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(124,58,237,0.2);
-      cursor: pointer; color: rgba(255,255,255,0.6); transition: all 0.2s;
-    }
-    .video-tab:first-child { border-radius: 8px 0 0 0; }
-    .video-tab:last-child { border-radius: 0 8px 0 0; }
-    .video-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .video-wrapper {
-      position: relative; width: 100%; padding-bottom: 56.25%;
-      border-radius: 0 0 8px 8px; overflow: hidden;
-      border: 1px solid rgba(124,58,237,0.2); border-top: none;
-    }
-    .video-wrapper iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-
-    .btn-help {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: linear-gradient(90deg, var(--primary-mid), var(--accent));
-      color: #fff; text-decoration: none;
-      font-size: 15px; font-weight: 600;
-      padding: 14px 28px; border-radius: 10px; transition: all 0.2s;
-    }
-    .btn-help:hover { filter: brightness(1.1); }
-    .btn-help svg { width: 18px; height: 18px; fill: currentColor; }
-
-    .step-screen { display: none; }
-    .step-screen.active { display: block; }
-
-    /* ===================== MOBILE ===================== */
-    @media (max-width: 600px) {
-      nav { padding: 10px 12px; gap: 8px; }
-      .nav-btn { font-size: 12px; padding: 8px 12px; gap: 6px; }
-      .nav-btn svg { width: 14px; height: 14px; }
-
-      .hero-banner { min-height: 55vw; }
-      .action-cards { gap: 10px; padding: 0 12px; margin-top: -28px; }
-      .action-card { width: calc(50% - 5px); padding: 20px 14px; border-radius: 10px; }
-      .action-card h3 { font-size: 14px; }
-      .action-card p { font-size: 12px; }
-      .action-card-icon { width: 36px; height: 36px; margin-bottom: 10px; }
-
-      .container { padding: 14px 12px 40px; }
-      .container h1 { font-size: 22px; }
-      .subtitle { font-size: 13px; margin-bottom: 20px; }
-      .step-card { padding: 18px 14px; margin-bottom: 14px; }
-      .step-card h2 { font-size: 17px; margin-bottom: 16px; }
-
-      .custom-select { font-size: 14px; padding: 12px 14px; }
-      .dropdown-item { padding: 12px 12px; gap: 10px; }
-      .item-icon { width: 32px; height: 32px; font-size: 16px; }
-      .item-info .item-name { font-size: 14px; }
-      .item-info .item-sub { font-size: 11px; }
-
-      .btn-row { gap: 8px; }
-      .btn-back { font-size: 13px; padding: 13px 14px; }
-      .btn-next { font-size: 13px; padding: 13px 14px; }
-      .btn-help { font-size: 13px; padding: 13px 18px; }
-
-      .result-header { padding: 12px 14px; gap: 10px; }
-      .result-app-name { font-size: 16px; }
-      .info-box { padding: 14px; }
-      .info-field-value { font-size: 17px; }
-      .info-field-value.small { font-size: 13px; }
-
-      .tutorial-steps-list { padding: 0 14px 16px; }
-      .t-step-text { font-size: 13px; }
-      .tutorial-box-title { font-size: 14px; padding: 12px 14px; }
-
-      .mock-nav { width: 80px; }
-      .mock-nav-item { font-size: 10px; padding: 8px 10px; }
-      .mock-content { padding: 10px; }
-      .mock-logo { font-size: 13px; }
-      .mock-input { font-size: 11px; padding: 6px 8px; }
-      .mock-go-btn { font-size: 11px; padding: 6px 10px; }
-
-      .video-tabs { flex-wrap: wrap; }
-      .video-tab { flex: none; width: 100%; font-size: 12px; padding: 10px 6px; border-radius: 0 !important; }
-      .video-tabs .video-tab:first-child { border-radius: 8px 8px 0 0 !important; }
-      .video-wrapper { border-radius: 0 0 8px 8px; }
-    }
-
-    @media (max-width: 360px) {
-      .action-card { padding: 16px 10px; }
-      .action-card h3 { font-size: 13px; }
-    }
-  </style>
+  #btn-copy {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: var(--yellow);
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
 
-<!-- ==================== NAV ==================== -->
-<nav id="main-nav">
-  <button class="nav-btn" id="nav-home-btn" onclick="showPage('home')">
-    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    Página Inicial
-  </button>
-  <div class="nav-right">
-    <a href="https://wa.me/5521992976849?text=Quero%20testa%20e%20conhecer%20o%20app" target="_blank" class="nav-btn">
-      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.558 4.14 1.535 5.876L.057 23.5l5.763-1.51A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.898 0-3.662-.523-5.168-1.43l-.371-.22-3.42.896.913-3.33-.242-.386A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-      Comprar Recarga
-    </a>
-    <a href="contador-likes.html?url=http://aftv.news/8723320" target="_blank" class="nav-btn nav-btn-likes">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-      <span>Contador de Like YouTube (PLAYSIM+)</span>
-    </a>
-  </div>
-</nav>
+  <div id="setup-panel">
+    <h2>Gerador de Link de Overlay</h2>
+    <p class="desc">Configure as opções e gere um link dedicado para carregar como Fonte de Navegador no OBS Studio.</p>
 
-<!-- ==================== HOME PAGE ==================== -->
-<div id="page-home">
-  <div class="hero-banner">
-    <img class="hero-banner-img" id="hero-img" src="" alt="VFP Play">
-    <div class="hero-banner-overlay"></div>
-    <div class="hero-content">
-      <div class="logo-main">VFP</div>
-      <div class="logo-sub">PLAY</div>
+    <div class="section-title">1. Escolha o Overlay</div>
+    <div class="overlay-selector">
+      <div class="overlay-option active" data-style="card" id="opt-card">
+        <div class="icon">❤️</div>
+        <div class="title">Contador Moderno</div>
+      </div>
+      <div class="overlay-option" data-style="boss" id="opt-boss">
+        <div class="icon">👹</div>
+        <div class="title">Boss Fight</div>
+      </div>
+    </div>
+
+    <div class="section-title">2. Dados do Canal</div>
+    <label for="input-channel">Link ou @usuário do canal</label>
+    <input id="input-channel" type="text" placeholder="@seucanal" />
+
+    <label for="input-key">API Key do YouTube Data API v3</label>
+    <input id="input-key" type="text" placeholder="AIzaSy..." />
+
+    <div id="boss-config-fields" style="display: none;">
+      <div class="section-title">3. Configurações do Boss</div>
+      <div class="boss-extra-config">
+        <div>
+          <label for="input-boss-goal">Meta Inicial</label>
+          <input id="input-boss-goal" type="number" min="1" value="10" />
+        </div>
+        <div>
+          <label for="input-boss-mult">Multiplicador</label>
+          <input id="input-boss-mult" type="number" step="0.5" min="1" value="2" />
+        </div>
+      </div>
+    </div>
+
+    <button id="btn-generate">Gerar Link do OBS</button>
+
+    <div id="result-box">
+      <label>Cole este link no OBS (Fonte de Navegador):</label>
+      <div id="result-url"></div>
+      <button id="btn-copy">Copiar Link</button>
     </div>
   </div>
-
-  <div class="action-cards">
-    <a href="#" class="action-card" onclick="showPage('tutorial'); return false;">
-      <div class="action-card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-      </div>
-      <h3>Baixar &amp; Instalar</h3>
-      <p>Guia passo a passo para instalar seu aplicativo.</p>
-    </a>
-
-    <a href="https://wa.me/5521992976849?text=Quero%20testa%20e%20conhecer%20o%20app" target="_blank" class="action-card">
-      <div class="action-card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-      </div>
-      <h3>Comprar Recarga</h3>
-      <p>Escolha como deseja comprar sua recarga.</p>
-    </a>
-  </div>
-
-  <footer>
-    © 2025 VFP Play - Brasil <span>❤</span>
-  </footer>
-</div>
-
-<!-- ==================== LIKES COUNTER PAGE ==================== -->
-<div id="page-likes">
-  <div class="container">
-    <h1>Contador de Like YouTube</h1>
-    <p class="subtitle">Escolha qual overlay você quer usar na sua live</p>
-
-    <div class="likes-cards">
-      <div class="likes-card">
-        <div class="likes-card-emoji">💥</div>
-        <h3>Explosão de Likes</h3>
-        <p>Card com contador de likes ao vivo e explosão de emojis a cada novo like.</p>
-        <div class="likes-card-actions">
-          <a href="contador-likes.html?url=http://aftv.news/8723320" target="_blank" class="likes-card-btn primary">👁️ Abrir</a>
-          <a href="#" class="likes-card-btn" onclick="copyOverlayLink('contador-likes.html?url=http://aftv.news/8723320', this); return false;">🔗 Copiar link</a>
-        </div>
-      </div>
-
-      <div class="likes-card">
-        <div class="likes-card-emoji">👹</div>
-        <h3>Boss Fight</h3>
-        <p>Barra de vida do boss que perde HP a cada like. Derrote e avance de fase.</p>
-        <div class="likes-card-actions">
-          <a href="boss-fight-overlay.html?url=http://aftv.news/8723320" target="_blank" class="likes-card-btn primary">👁️ Abrir</a>
-          <a href="#" class="likes-card-btn" onclick="copyOverlayLink('boss-fight-overlay.html?url=http://aftv.news/8723320', this); return false;">🔗 Copiar link</a>
-        </div>
-      </div>
-    </div>
-
-    <p class="likes-note">
-      Clique em <strong>Copiar link</strong> e cole no OBS como <strong>Fonte do Navegador (Browser Source)</strong> —
-      é a URL do overlay já hospedado no seu site, então funciona ao vivo, direto do link. Use
-      <strong>Abrir</strong> pra conferir no navegador antes. Fundo é transparente. Esses arquivos
-      (<code>contador-likes.html</code> e <code>boss-fight-overlay.html</code>) precisam estar hospedados
-      na mesma pasta deste <code>index.html</code> no seu site.
-    </p>
-  </div>
-</div>
-
-<!-- ==================== TUTORIAL PAGE ==================== -->
-<div id="page-tutorial">
-  <div class="container">
-    <h1>Tutorial de Instalação</h1>
-    <p class="subtitle">Siga os passos para instalar seu aplicativo</p>
-
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span id="step-label">Etapa 1 de 4</span>
-        <span id="step-pct">25%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-bar" id="progress-bar" style="width: 25%"></div>
-      </div>
-    </div>
-
-    <!-- STEP 1 -->
-    <div class="step-screen active" id="screen-1">
-      <div class="step-card">
-        <h2>Escolha o Aplicativo</h2>
-        <div class="select-wrapper">
-          <div class="custom-select" id="app-select-btn" onclick="toggleDropdown('app')">
-            <div class="select-display" id="app-display">
-              <span class="select-placeholder">Selecione o aplicativo...</span>
-            </div>
-            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-          </div>
-          <div class="dropdown" id="app-dropdown">
-            <div class="dropdown-item" data-value="arcplayer" onclick="selectApp(this)">
-              <div class="item-icon" style="background:#1e3a5f;">🎯</div>
-              <div class="item-info"><div class="item-name">ArcPlayer</div><div class="item-sub">Player IPTV</div></div>
-            </div>
-            <div class="dropdown-item" data-value="assit" onclick="selectApp(this)">
-              <div class="item-icon" style="background:#1a3a1a;">📺</div>
-              <div class="item-info"><div class="item-name">ASSIT+ APP</div><div class="item-sub">Streaming</div></div>
-            </div>
-            <div class="dropdown-item" data-value="playsim" onclick="selectApp(this)">
-              <div class="item-icon" style="background:#2d1b4e;">▶️</div>
-              <div class="item-info"><div class="item-name">PLAYSIM+</div><div class="item-sub">Streaming</div></div>
-            </div>
-            <div class="dropdown-item" data-value="magic" onclick="selectApp(this)">
-              <div class="item-icon" style="background:#3a1a00;">✨</div>
-              <div class="item-info"><div class="item-name">MAGIC PLAYER</div><div class="item-sub">Player IPTV</div></div>
-            </div>
-          </div>
-        </div>
-        <p class="hint-text">Clique em <strong>Continuar</strong> logo abaixo.</p>
-      </div>
-      <div class="btn-row">
-        <button class="btn-back" onclick="showPage('home')">
-          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-          Voltar
-        </button>
-        <button class="btn-next" id="btn-1" disabled onclick="goStep(2)">
-          Continuar
-          <svg viewBox="0 0 24 24"><path d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- STEP 2 -->
-    <div class="step-screen" id="screen-2">
-      <div class="step-card">
-        <h2>Escolha o Dispositivo</h2>
-        <div class="select-wrapper">
-          <div class="custom-select" id="device-select-btn" onclick="toggleDropdown('device')">
-            <div class="select-display" id="device-display">
-              <span class="select-placeholder">Selecione o dispositivo...</span>
-            </div>
-            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-          </div>
-          <div class="dropdown" id="device-dropdown">
-            <div class="dropdown-item" data-value="tvbox" onclick="selectDevice(this)">
-              <div class="item-icon" style="background:#1a1a2e;">📦</div>
-              <div class="item-info"><div class="item-name">Tv box</div><div class="item-sub">TV Box Android</div></div>
-            </div>
-            <div class="dropdown-item" data-value="androidtv" onclick="selectDevice(this)">
-              <div class="item-icon" style="background:#0f2027;">📡</div>
-              <div class="item-info"><div class="item-name">AndroidTV / FireTV Stick / Mi Stick e outros</div><div class="item-sub">AndroidTV, FireTV Stick, Mi Stick e outros dispositivos Android</div></div>
-            </div>
-            <div class="dropdown-item" data-value="supertv" onclick="selectDevice(this)">
-              <div class="item-icon" style="background:#200122;">📺</div>
-              <div class="item-info"><div class="item-name">SuperTV (BOX)</div><div class="item-sub">SuperTV Box</div></div>
-            </div>
-            <div class="dropdown-item" data-value="btv" onclick="selectDevice(this)">
-              <div class="item-icon" style="background:#0a1628;">🎯</div>
-              <div class="item-info"><div class="item-name">btv (BOX)</div><div class="item-sub">BTV Box</div></div>
-            </div>
-            <div class="dropdown-item" data-value="celular" onclick="selectDevice(this)">
-              <div class="item-icon" style="background:#1a0a00;">📱</div>
-              <div class="item-info"><div class="item-name">Celular &amp; Tablet</div><div class="item-sub">Smartphones e Tablets Android</div></div>
-            </div>
-          </div>
-        </div>
-        <p class="hint-text">Clique em <strong>Continuar</strong> logo abaixo.</p>
-      </div>
-      <div class="btn-row">
-        <button class="btn-back" onclick="goStep(1)">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-          Voltar
-        </button>
-        <button class="btn-next" id="btn-2" disabled onclick="goStep(3)">
-          Continuar
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- STEP 3 -->
-    <div class="step-screen" id="screen-3">
-      <div class="step-card">
-        <h2>Escolha o Método de Instalação</h2>
-        <div class="select-wrapper">
-          <div class="custom-select" id="method-select-btn" onclick="toggleDropdown('method')">
-            <div class="select-display" id="method-display">
-              <span class="select-placeholder">Selecione o método...</span>
-            </div>
-            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-          </div>
-          <div class="dropdown" id="method-dropdown">
-            <div class="dropdown-item" data-value="downloader" onclick="selectMethod(this)">
-              <div class="item-icon" style="background:#e88e14; color:#fff; font-size:16px; font-weight:800;">D</div>
-              <div class="item-info"><div class="item-name">Downloader by Aftvnews</div><div class="item-sub">Instalação via aplicativo Downloader by Aftvnews</div></div>
-            </div>
-            <div class="dropdown-item" data-value="sendfile" onclick="selectMethod(this)">
-              <div class="item-icon" style="background:#1d4ed8;">📲</div>
-              <div class="item-info"><div class="item-name">Send File to TV</div><div class="item-sub">Instalação via celular usando Send File to TV</div></div>
-            </div>
-            <div class="dropdown-item" data-value="url" onclick="selectMethod(this)">
-              <div class="item-icon" style="background:#166534;">🔗</div>
-              <div class="item-info"><div class="item-name">URL de Download Direto</div><div class="item-sub">Instalação via URL de download direto do APK</div></div>
-            </div>
-          </div>
-        </div>
-        <p class="hint-text">Clique em <strong>Continuar</strong> logo abaixo.</p>
-      </div>
-      <div class="btn-row">
-        <button class="btn-back" onclick="goStep(2)">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-          Voltar
-        </button>
-        <button class="btn-next" id="btn-3" disabled onclick="goStep(4)">
-          Continuar
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- STEP 4 -->
-    <div class="step-screen" id="screen-4">
-      <div class="step-card">
-        <div id="result-header"></div>
-        <div class="info-box">
-          <div class="info-box-title">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Informações de Download
-          </div>
-          <div class="info-field">
-            <label>Código de Download</label>
-            <div class="info-field-value">
-              <span id="result-code">—</span>
-              <button class="copy-btn" onclick="copyText('result-code', this)" title="Copiar código">
-                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-              </button>
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div class="info-field">
-            <label>URL de Download Direto</label>
-            <div class="info-field-value small">
-              <span id="result-url">—</span>
-              <button class="copy-btn" onclick="copyText('result-url', this)" title="Copiar URL">
-                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="tutorial-steps-wrap"></div>
-
-      <div class="tutorial-box" id="video-section">
-        <div class="tutorial-box-title">🎬 Vídeo Tutorial</div>
-        <div style="padding: 16px 20px 20px;">
-          <div class="video-tabs" id="video-tabs">
-            <div class="video-tab active" onclick="switchTab(this,'celular')">📱 Celular → TV (Send File)</div>
-            <div class="video-tab" onclick="switchTab(this,'tv')">📺 TV Android / Box</div>
-            <div class="video-tab" onclick="switchTab(this,'firestick')">🔥 Fire TV Stick</div>
-          </div>
-          <div class="video-wrapper">
-            <iframe id="yt-player" src="https://www.youtube.com/embed/CSEWnywmSsM?si=W-Q9X8Pr3vMbkzr-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-          </div>
-          <p style="margin-top:12px; font-size:13px; color:rgba(255,255,255,0.6);">
-            💡 Dica: Se tiver dificuldades durante a instalação, entre em contato conosco pelo
-            <a href="https://wa.me/5521992976849?text=Preciso%20de%20ajuda%20para%20instalar" target="_blank" style="color:#a78bfa;">WhatsApp</a>
-            para ajuda personalizada.
-          </p>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-back" style="flex:1; justify-content:center;" onclick="goStep(3)">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-          Voltar
-        </button>
-        <a href="https://wa.me/5521992976849?text=Preciso%20de%20ajuda%20para%20instalar" target="_blank" class="btn-help">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
-          Precisa de Ajuda?
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    © 2025 VFP Play - Brasil <span>❤</span>
-  </footer>
-</div>
 
 <script>
-// ============ PAGE NAVIGATION ============
-function showPage(page) {
-  document.getElementById('page-home').style.display = page === 'home' ? 'block' : 'none';
-  document.getElementById('page-tutorial').style.display = page === 'tutorial' ? 'block' : 'none';
-  document.getElementById('page-likes').style.display = page === 'likes' ? 'block' : 'none';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (page === 'tutorial') {
-    goStep(1);
-  }
-}
+  let selectedStyle = 'card';
 
-// ============ DATA ============
-const APPS = {
-  arcplayer: { name: 'ArcPlayer', sub: 'Player IPTV', emoji: '🎯', color: '#1e3a5f', code: '991098', url: 'http://aftv.news/991098' },
-  assit:     { name: 'ASSIT+ APP', sub: 'Streaming', emoji: '📺', color: '#1a3a1a', code: '5634857', url: 'http://aftv.news/5634857' },
-  playsim:   { name: 'PLAYSIM+', sub: 'Streaming', emoji: '▶️', color: '#2d1b4e', code: '8723320', url: 'http://aftv.news/8723320' },
-  magic:     { name: 'MAGIC PLAYER', sub: 'Player IPTV', emoji: '✨', color: '#3a1a00', code: '8634040', url: 'http://aftv.news/8634040' },
-};
-const METHODS = {
-  downloader: 'Downloader by Aftvnews',
-  sendfile:   'Send File to TV',
-  url:        'URL de Download Direto',
-};
-const VIDEOS = {
-  celular:   'CSEWnywmSsM?si=W-Q9X8Pr3vMbkzr-',
-  tv:        'PhlOf39b6fA?si=0Yvu-C-GWo6gkp5i&start=35',
-  firestick: 'gq_NphxLpm0?si=Ok5pRNjrIgCnkSkI',
-};
+  const optCard = document.getElementById('opt-card');
+  const optBoss = document.getElementById('opt-boss');
+  const bossFields = document.getElementById('boss-config-fields');
 
-let selectedApp = null;
-let selectedDevice = null;
-let selectedMethod = null;
-
-// ============ STEP NAVIGATION ============
-const STEPS = { 1: '25%', 2: '50%', 3: '75%', 4: '100%' };
-
-function goStep(n) {
-  document.querySelectorAll('.step-screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + n).classList.add('active');
-  document.getElementById('step-label').textContent = 'Etapa ' + n + ' de 4';
-  document.getElementById('step-pct').textContent = STEPS[n];
-  document.getElementById('progress-bar').style.width = STEPS[n];
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (n === 4) buildResult();
-}
-
-// ============ DROPDOWNS ============
-function toggleDropdown(type) {
-  const dd = document.getElementById(type + '-dropdown');
-  const btn = document.getElementById(type + '-select-btn');
-  const isOpen = dd.classList.contains('open');
-  closeAll();
-  if (!isOpen) { dd.classList.add('open'); btn.classList.add('open'); }
-}
-function closeAll() {
-  ['app','device','method'].forEach(t => {
-    const dd = document.getElementById(t + '-dropdown');
-    const btn = document.getElementById(t + '-select-btn');
-    if (dd) { dd.classList.remove('open'); btn.classList.remove('open'); }
+  optCard.addEventListener('click', () => {
+    selectedStyle = 'card';
+    optCard.classList.add('active');
+    optBoss.classList.remove('active');
+    bossFields.style.display = 'none';
   });
-}
-document.addEventListener('click', e => {
-  if (!e.target.closest('.select-wrapper')) closeAll();
-});
 
-function selectApp(el) {
-  const key = el.dataset.value;
-  selectedApp = APPS[key];
-  document.getElementById('app-display').innerHTML =
-    `<div style="width:28px;height:28px;border-radius:6px;background:${selectedApp.color};display:flex;align-items:center;justify-content:center;">${selectedApp.emoji}</div>
-     <span>${selectedApp.name}</span>`;
-  document.querySelectorAll('#app-dropdown .dropdown-item').forEach(i => i.classList.remove('selected'));
-  el.classList.add('selected');
-  closeAll();
-  enableBtn('btn-1');
-}
-
-function selectDevice(el) {
-  selectedDevice = el.querySelector('.item-name').textContent;
-  const icon = el.querySelector('.item-icon').innerHTML;
-  const bg = el.querySelector('.item-icon').style.background;
-  document.getElementById('device-display').innerHTML =
-    `<div style="width:28px;height:28px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;">${icon}</div>
-     <span>${selectedDevice}</span>`;
-  document.querySelectorAll('#device-dropdown .dropdown-item').forEach(i => i.classList.remove('selected'));
-  el.classList.add('selected');
-  closeAll();
-  enableBtn('btn-2');
-}
-
-function selectMethod(el) {
-  selectedMethod = el.dataset.value;
-  const name = el.querySelector('.item-name').textContent;
-  const icon = el.querySelector('.item-icon').innerHTML;
-  const bg = el.querySelector('.item-icon').style.background;
-  document.getElementById('method-display').innerHTML =
-    `<div style="width:28px;height:28px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;">${icon}</div>
-     <span>${name}</span>`;
-  document.querySelectorAll('#method-dropdown .dropdown-item').forEach(i => i.classList.remove('selected'));
-  el.classList.add('selected');
-  closeAll();
-  enableBtn('btn-3');
-}
-
-function enableBtn(id) {
-  const btn = document.getElementById(id);
-  btn.disabled = false;
-  btn.classList.add('active');
-}
-
-// ============ BUILD RESULT ============
-function buildResult() {
-  if (!selectedApp) return;
-  const app = selectedApp;
-  document.getElementById('result-header').innerHTML = `
-    <div class="result-header">
-      <div class="result-app-icon" style="background:${app.color};">${app.emoji}</div>
-      <div>
-        <div class="result-app-name">Instalando ${app.name}</div>
-        <div class="result-app-method">Método: ${METHODS[selectedMethod] || 'Downloader by Aftvnews'}</div>
-      </div>
-    </div>
-  `;
-  document.getElementById('result-code').textContent = app.code;
-  document.getElementById('result-url').textContent = app.url;
-  buildTutorialSteps();
-}
-
-function buildTutorialSteps() {
-  const app = selectedApp;
-  const method = selectedMethod || 'downloader';
-  let stepsHtml = '';
-
-  if (method === 'downloader') {
-    stepsHtml = `
-      <div class="t-step">
-        <div class="t-step-num">Passo 1</div>
-        <div class="t-step-text">Abra a <strong>Loja de Aplicativos</strong> do seu dispositivo e pesquise pelo aplicativo <strong>Downloader by AFTVnews</strong>. Baixe a versão correta.</div>
-        <div class="downloader-mock t-step-img">
-          <div class="mock-sidebar">
-            <div class="mock-nav">
-              <div class="mock-nav-item active">Home</div>
-              <div class="mock-nav-item">Browser</div>
-              <div class="mock-nav-item">Files</div>
-              <div class="mock-nav-item">Favorites</div>
-              <div class="mock-nav-item">Settings</div>
-              <div class="mock-nav-item">Help</div>
-            </div>
-            <div class="mock-content">
-              <div class="mock-logo">⬇ Downloader by AFTVnews.com</div>
-              <div style="font-size:11px;color:#888;margin-bottom:8px;">Enter a URL, Search Term or File Code:</div>
-              <div class="mock-input-row">
-                <input class="mock-input" placeholder='Ex: "AFTVnews.com" or "12345"' readonly>
-                <button class="mock-go-btn">Go</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 2</div>
-        <div class="t-step-text">Abra o <strong>Downloader</strong>, digite o código do aplicativo <strong>${app.code}</strong> e clique no botão <strong>Go</strong> para começar a baixar o instalador do aplicativo.</div>
-        <div class="downloader-mock t-step-img">
-          <div class="mock-sidebar">
-            <div class="mock-nav">
-              <div class="mock-nav-item active">Home</div>
-              <div class="mock-nav-item">Browser</div>
-              <div class="mock-nav-item">Files</div>
-            </div>
-            <div class="mock-content">
-              <div class="mock-logo">⬇ Downloader by AFTVnews.com</div>
-              <div class="mock-input-row">
-                <input class="mock-input" value="${app.code}" readonly>
-                <button class="mock-go-btn">Go</button>
-              </div>
-              <div class="arrow-label">
-                <span class="arrow-text">← Digite aqui o CÓDIGO do aplicativo</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 3</div>
-        <div class="t-step-text">Clique em <strong style="color:#a78bfa;">Allow</strong> ou <strong style="color:#a78bfa;">Permitir</strong> para iniciar o download.</div>
-        <div class="downloader-mock t-step-img" style="padding:14px;">
-          <div style="background:#2a2a2a;border-radius:6px;padding:14px;max-width:340px;margin:auto;">
-            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Download</div>
-            <div style="font-size:12px;color:#aaa;margin-bottom:10px;">Allow <strong>Downloader</strong> to access photos, media and files on your device?</div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-              <button style="padding:6px 16px;background:transparent;border:1px solid #555;border-radius:4px;color:#ccc;font-size:12px;">Deny</button>
-              <button style="padding:6px 16px;background:#5b21b6;border:none;border-radius:4px;color:#fff;font-size:12px;font-weight:700;outline:2px solid #a78bfa;">Allow ✓</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 4</div>
-        <div class="t-step-text">Aguarde até terminar de baixar o instalador do aplicativo.</div>
-        <div class="downloader-mock t-step-img" style="padding:14px;">
-          <div style="background:#2a2a2a;border-radius:6px;padding:14px;max-width:340px;margin:auto;">
-            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:8px;">Download</div>
-            <div style="font-size:12px;color:#aaa;margin-bottom:8px;">File download progress: 24.6 MB/63.4 MB</div>
-            <div style="height:6px;background:#333;border-radius:3px;overflow:hidden;margin-bottom:10px;">
-              <div style="height:100%;width:38%;background:#e88e14;border-radius:3px;"></div>
-            </div>
-            <button style="width:100%;padding:8px;background:#e88e14;border:none;border-radius:4px;color:#fff;font-size:13px;font-weight:700;">Cancel</button>
-          </div>
-        </div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 5</div>
-        <div class="t-step-text">Após finalizar, clique no botão <strong style="color:#a78bfa;">Install</strong> ou <strong style="color:#a78bfa;">Instalar</strong> para iniciar a instalação.</div>
-        <div class="downloader-mock t-step-img" style="padding:14px;">
-          <div style="background:#2a2a2a;border-radius:6px;padding:14px;max-width:340px;margin:auto;">
-            <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Download</div>
-            <div style="font-size:12px;color:#4ade80;margin-bottom:4px;">File downloaded successfully to:</div>
-            <div style="font-size:11px;color:#aaa;margin-bottom:10px;">/sdcard/Downloader/app.apk</div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-              <button style="padding:6px 14px;background:#5b21b6;border:none;border-radius:4px;color:#fff;font-size:12px;font-weight:700;">Install</button>
-              <button style="padding:6px 14px;background:#e88e14;border:none;border-radius:4px;color:#fff;font-size:12px;font-weight:700;">Delete</button>
-              <button style="padding:6px 14px;background:#333;border:none;border-radius:4px;color:#ccc;font-size:12px;">Done</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 6</div>
-        <div class="t-step-text">Se durante a instalação você tiver dificuldade por não aceitar a instalação de aplicativos de fontes desconhecidas, será necessário realizar configuração conforme o vídeo abaixo.</div>
-      </div>
-    `;
-  } else if (method === 'sendfile') {
-    stepsHtml = `
-      <div class="t-step">
-        <div class="t-step-num">Passo 1</div>
-        <div class="t-step-text">No seu <strong>celular</strong>, acesse o link de download do app: <a href="${app.url}" target="_blank" style="color:#a78bfa;">${app.url}</a> e salve o arquivo APK.</div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 2</div>
-        <div class="t-step-text">Baixe o aplicativo <strong>Send File to TV</strong> na Play Store do celular e na loja de aplicativos da sua TV/Box.</div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 3</div>
-        <div class="t-step-text">Abra o <strong>Send File to TV</strong> no celular, selecione o arquivo APK baixado e escolha o dispositivo TV/Box para enviar.</div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 4</div>
-        <div class="t-step-text">Na TV/Box, aceite o arquivo recebido e clique em <strong style="color:#a78bfa;">Instalar</strong>.</div>
-      </div>
-    `;
-  } else {
-    stepsHtml = `
-      <div class="t-step">
-        <div class="t-step-num">Passo 1</div>
-        <div class="t-step-text">No dispositivo, abra um navegador ou o Downloader e acesse a URL direta: <a href="${app.url}" target="_blank" style="color:#a78bfa;">${app.url}</a></div>
-      </div>
-      <div class="t-step">
-        <div class="t-step-num">Passo 2</div>
-        <div class="t-step-text">Aguarde o download completar e clique em <strong style="color:#a78bfa;">Instalar</strong>.</div>
-      </div>
-    `;
-  }
-
-  document.getElementById('tutorial-steps-wrap').innerHTML = `
-    <div class="tutorial-box">
-      <div class="tutorial-box-title">📋 Passo a Passo da Instalação</div>
-      <div class="tutorial-steps-list">${stepsHtml}</div>
-    </div>
-  `;
-}
-
-// ============ VIDEO TABS ============
-function switchTab(el, key) {
-  document.querySelectorAll('.video-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('yt-player').src = 'https://www.youtube.com/embed/' + VIDEOS[key];
-}
-
-// ============ COPY ============
-function copyText(id, btn) {
-  const text = document.getElementById(id).textContent.trim();
-  navigator.clipboard.writeText(text).then(() => {
-    btn.classList.add('copied');
-    setTimeout(() => btn.classList.remove('copied'), 2000);
+  optBoss.addEventListener('click', () => {
+    selectedStyle = 'boss';
+    optBoss.classList.add('active');
+    optCard.classList.remove('active');
+    bossFields.style.display = 'block';
   });
-}
 
-function copyOverlayLink(path, btn) {
-  const fullUrl = window.location.origin + window.location.pathname.replace('index.html', '') + path;
-  navigator.clipboard.writeText(fullUrl).then(() => {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✓ Copiado!';
-    setTimeout(() => btn.innerHTML = orig, 2000);
+  document.getElementById('btn-generate').addEventListener('click', async () => {
+    const rawChannel = document.getElementById('input-channel').value.trim();
+    const apiKey = document.getElementById('input-key').value.trim();
+    const goal = document.getElementById('input-boss-goal').value;
+    const mult = document.getElementById('input-boss-mult').value;
+
+    if(!rawChannel || !apiKey) {
+      alert('Preencha o canal e a API key');
+      return;
+    }
+
+    // Resolvendo ID do Canal se necessário
+    let channelId = rawChannel;
+    let handleMatch = rawChannel.match(/@([A-Za-z0-9._-]+)/);
+    let handle = handleMatch ? '@' + handleMatch[1] : (rawChannel.startsWith('@') ? rawChannel : null);
+
+    if(handle) {
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.items && data.items.length > 0) {
+          channelId = data.items[0].id;
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    // Cria a URL apontando para overlay.html no mesmo diretório
+    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/overlay.html';
+    const params = new URLSearchParams({
+      style: selectedStyle,
+      channelId: channelId,
+      key: apiKey,
+      goal: goal,
+      mult: mult
+    });
+
+    const finalUrl = `${baseUrl}?${params.toString()}`;
+    
+    document.getElementById('result-url').textContent = finalUrl;
+    document.getElementById('result-box').style.display = 'block';
   });
-}
+
+  document.getElementById('btn-copy').addEventListener('click', () => {
+    const url = document.getElementById('result-url').textContent;
+    navigator.clipboard.writeText(url);
+    alert('Link copiado com sucesso!');
+  });
 </script>
 </body>
 </html>
