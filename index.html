@@ -2,269 +2,736 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel de Gerador de Overlay</title>
+<title>Contador de Likes - Overlay & Boss Fight</title>
 <style>
   :root {
     --pink: #FF3CAC;
     --purple: #784BA0;
+    --blue: #2B86C5;
     --yellow: #FFD93D;
+    --red: #FF3B3B;
     --white: #FFFFFF;
     --dark: #1a0b2e;
-    --dark-light: #2d1454;
   }
 
-  body {
+  html, body {
     margin: 0;
-    padding: 20px;
-    background: #0f061b;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+
+  /* Painel de Controle de Modos */
+  #mode-selector {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    display: flex;
+    gap: 12px;
+    background: rgba(26, 11, 46, 0.85);
+    padding: 10px 14px;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  #mode-selector a {
     color: var(--white);
-  }
-
-  #setup-panel {
-    max-width: 440px;
-    margin: 20px auto;
-    padding: 24px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--dark), var(--dark-light));
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    border: 2px solid rgba(255,255,255,0.1);
-    box-sizing: border-box;
-  }
-
-  #setup-panel h2 {
-    margin: 0 0 6px;
-    font-size: 20px;
-    color: var(--yellow);
-  }
-
-  #setup-panel p.desc {
-    margin: 0 0 18px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.75);
-    line-height: 1.4;
-  }
-
-  .section-title {
+    text-decoration: none;
     font-size: 13px;
     font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  #mode-selector a:hover {
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 60, 172, 0.3);
+  }
+
+  #mode-selector a.active {
+    background: linear-gradient(135deg, var(--pink), var(--blue));
+    border-color: var(--yellow);
+  }
+
+  /* Container Principal com Espaçamento do Topo */
+  #app-container {
+    padding-top: 80px;
+    padding-left: 20px;
+  }
+
+  /* ================= ESTILOS OVERLAY (MODO 1) ================= */
+  #overlay-view {
+    display: none;
+  }
+
+  #overlay-view #card {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 28px 14px 18px;
+    border-radius: 60px;
+    background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
+    background-size: 200% 200%;
+    animation: flowGradient 6s ease infinite;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    width: fit-content;
+  }
+
+  @keyframes flowGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  #overlay-view #icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    background: var(--white);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  #overlay-view #icon-wrap svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  #overlay-view #icon-wrap.pulse {
+    animation: pop 0.5s ease;
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.35); }
+    60%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  #overlay-view #text-block {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+  }
+
+  #overlay-view #label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
     text-transform: uppercase;
     color: var(--yellow);
-    margin: 16px 0 8px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
 
-  .overlay-selector {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 18px;
+  #overlay-view #count {
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--white);
+    text-shadow: 0 2px 6px rgba(0,0,0,0.45);
+    font-variant-numeric: tabular-nums;
   }
 
-  .overlay-option {
-    border: 2px solid rgba(255,255,255,0.15);
-    background: rgba(0,0,0,0.3);
-    border-radius: 12px;
-    padding: 12px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
+  #overlay-view #count.bump {
+    animation: bump 0.5s ease;
   }
 
-  .overlay-option.active {
-    border-color: var(--yellow);
-    background: linear-gradient(135deg, rgba(255,60,172,0.25), rgba(120,75,160,0.25));
+  @keyframes bump {
+    0%   { transform: scale(1) translateY(0); }
+    40%  { transform: scale(1.15) translateY(-4px); }
+    100% { transform: scale(1) translateY(0); }
   }
 
-  label {
-    display: block;
+  #overlay-view #stage {
+    position: relative;
+    width: fit-content;
+  }
+
+  #overlay-view #particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .particle {
+    position: absolute;
+    top: 50%;
+    left: 54px;
+    font-size: 22px;
+    opacity: 1;
+    will-change: transform, opacity;
+    animation: explode-anim linear forwards;
+  }
+
+  @keyframes explode-anim {
+    0% {
+      transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+      opacity: 1;
+    }
+    70% { opacity: 1; }
+    100% {
+      transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--scale)) rotate(var(--rot));
+      opacity: 0;
+    }
+  }
+
+  #overlay-view #shockwave {
+    position: absolute;
+    top: 50%;
+    left: 54px;
+    width: 54px;
+    height: 54px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid var(--yellow);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #overlay-view #shockwave.go {
+    animation: shockwave-anim 0.6s ease-out;
+  }
+
+  @keyframes shockwave-anim {
+    0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+  }
+
+  /* ================= ESTILOS BOSS FIGHT (MODO 2) ================= */
+  #boss-view {
+    display: none;
+  }
+
+  #boss-view #stage {
+    position: relative;
+    width: 480px;
+  }
+
+  #boss-view #boss-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 20px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--dark), #2d1454);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.08);
+  }
+
+  #boss-view #boss-card.shake {
+    animation: shake-anim 0.35s ease;
+  }
+
+  @keyframes shake-anim {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(-6px, 2px); }
+    40%  { transform: translate(5px, -2px); }
+    60%  { transform: translate(-4px, 1px); }
+    80%  { transform: translate(3px, -1px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  #boss-view #boss-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #boss-view #boss-name {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--yellow);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  #boss-view #boss-level {
     font-size: 12px;
     font-weight: 700;
-    margin-bottom: 4px;
+    color: rgba(255,255,255,0.65);
   }
 
-  input {
+  #boss-view #hp-track {
+    position: relative;
     width: 100%;
-    box-sizing: border-box;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(0,0,0,0.4);
-    color: var(--white);
-    font-size: 13px;
+    height: 26px;
+    background: rgba(0,0,0,0.45);
+    border-radius: 13px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
   }
 
-  .boss-extra-config {
+  #boss-view #hp-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--red), #ff7a5c);
+    border-radius: 13px 0 0 13px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 12px rgba(255, 59, 59, 0.7) inset;
+  }
+
+  #boss-view #hp-text {
+    position: absolute;
+    inset: 0;
     display: flex;
-    gap: 10px;
-  }
-
-  .boss-extra-config > div {
-    flex: 1;
-  }
-
-  #btn-generate {
-    width: 100%;
-    padding: 13px;
-    border: none;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--pink), var(--purple));
-    color: var(--white);
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
     font-weight: 800;
-    font-size: 14px;
-    cursor: pointer;
-    text-transform: uppercase;
-    margin-top: 6px;
+    color: var(--white);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    font-variant-numeric: tabular-nums;
   }
 
-  #result-box {
-    display: none;
-    margin-top: 20px;
-    padding: 12px;
-    background: rgba(0,0,0,0.5);
-    border-radius: 10px;
-    border: 1px solid var(--pink);
-  }
-
-  #result-url {
-    word-break: break-all;
+  #boss-view #boss-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     font-size: 11px;
-    color: var(--yellow);
-    margin-bottom: 8px;
+    color: rgba(255,255,255,0.75);
   }
 
-  #btn-copy {
+  #boss-view #boss-emoji {
+    font-size: 46px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+    transform-origin: center;
+  }
+
+  #boss-view #boss-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  #boss-view #boss-emoji.hit {
+    animation: hit-anim 0.35s ease;
+  }
+
+  @keyframes hit-anim {
+    0%   { transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+    40%  { transform: scale(0.85) rotate(-6deg); filter: brightness(2.2) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+    100% { transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+  }
+
+  #boss-view #dmg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    background: var(--yellow);
-    color: #000;
-    font-weight: bold;
-    cursor: pointer;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .dmg-pop {
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--yellow);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    opacity: 1;
+    animation: dmg-float 900ms ease-out forwards;
+  }
+
+  @keyframes dmg-float {
+    0%   { transform: translateY(0) scale(0.7); opacity: 1; }
+    30%  { transform: translateY(-10px) scale(1.15); opacity: 1; }
+    100% { transform: translateY(-46px) scale(1); opacity: 0; }
+  }
+
+  #boss-view #victory-banner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    background: radial-gradient(circle, rgba(255,217,61,0.95), rgba(255,60,172,0.9));
+    border-radius: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+  }
+
+  #boss-view #victory-banner.show {
+    animation: victory-anim 2.2s ease forwards;
+  }
+
+  @keyframes victory-anim {
+    0%   { opacity: 0; transform: scale(0.7); }
+    15%  { opacity: 1; transform: scale(1.05); }
+    25%  { opacity: 1; transform: scale(1); }
+    85%  { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.1); }
+  }
+
+  #boss-view #victory-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--dark);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  #boss-view #victory-sub {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(26,11,46,0.8);
+  }
+
+  .status-text {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 6px;
   }
 </style>
 </head>
 <body>
 
-  <div id="setup-panel">
-    <h2>Gerador de Link de Overlay</h2>
-    <p class="desc">Configure as opções e gere um link dedicado para carregar como Fonte de Navegador no OBS Studio.</p>
+  <!-- Menu de navegação destacado -->
+  <div id="mode-selector">
+    <a href="?mode=overlay" id="btn-overlay">Modo Overlay</a>
+    <a href="?mode=boss" id="btn-boss">Modo Boss Fight</a>
+  </div>
 
-    <div class="section-title">1. Escolha o Overlay</div>
-    <div class="overlay-selector">
-      <div class="overlay-option active" data-style="card" id="opt-card">
-        <div class="icon">❤️</div>
-        <div class="title">Contador Moderno</div>
-      </div>
-      <div class="overlay-option" data-style="boss" id="opt-boss">
-        <div class="icon">👹</div>
-        <div class="title">Boss Fight</div>
+  <div id="app-container">
+    <!-- VISÃO 1: OVERLAY -->
+    <div id="overlay-view">
+      <div id="stage">
+        <div id="card">
+          <div id="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="#FF3CAC">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+                       2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+                       C13.09 3.81 14.76 3 16.5 3
+                       19.58 3 22 5.42 22 8.5
+                       c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </div>
+          <div id="text-block">
+            <div id="label">Likes</div>
+            <div id="count">--</div>
+            <div id="status-overlay" class="status-text">Procurando live...</div>
+          </div>
+        </div>
+        <div id="shockwave"></div>
+        <div id="particles"></div>
       </div>
     </div>
 
-    <div class="section-title">2. Dados do Canal</div>
-    <label for="input-channel">Link ou @usuário do canal</label>
-    <input id="input-channel" type="text" placeholder="@seucanal" />
+    <!-- VISÃO 2: BOSS FIGHT -->
+    <div id="boss-view">
+      <div id="stage">
+        <div id="boss-card">
+          <div id="boss-top">
+            <div id="boss-name">Boss selvagem</div>
+            <div id="boss-level">Fase 1</div>
+          </div>
 
-    <label for="input-key">API Key do YouTube Data API v3</label>
-    <input id="input-key" type="text" placeholder="AIzaSy..." />
+          <div id="boss-header">
+            <div id="boss-emoji">👹</div>
 
-    <div id="boss-config-fields" style="display: none;">
-      <div class="section-title">3. Configurações do Boss</div>
-      <div class="boss-extra-config">
-        <div>
-          <label for="input-boss-goal">Meta Inicial</label>
-          <input id="input-boss-goal" type="number" min="1" value="10" />
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <div id="hp-track">
+                <div id="hp-fill"></div>
+                <div id="hp-text">-- / -- likes</div>
+              </div>
+              <div id="boss-bottom">
+                <span id="hp-percent">100% de vida</span>
+                <span id="goal-label">Meta: -- likes</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <label for="input-boss-mult">Multiplicador</label>
-          <input id="input-boss-mult" type="number" step="0.5" min="1" value="2" />
+
+        <div id="dmg-layer"></div>
+
+        <div id="victory-banner">
+          <div id="victory-title">Boss derrotado!</div>
+          <div id="victory-sub">Próximo desafio chegando...</div>
         </div>
       </div>
-    </div>
 
-    <button id="btn-generate">Gerar Link do OBS</button>
-
-    <div id="result-box">
-      <label>Cole este link no OBS (Fonte de Navegador):</label>
-      <div id="result-url"></div>
-      <button id="btn-copy">Copiar Link</button>
+      <div id="status-boss" class="status-text" style="width: 480px; text-align: center;">Procurando live...</div>
     </div>
   </div>
 
 <script>
-  let selectedStyle = 'card';
+  // CONFIGURAÇÃO GLOBAL
+  const API_KEY = "AIzaSyD6gc0YqDR-RfhZdm5eMVgIdus3OPxL-u8";
+  const CHANNEL_ID = "UClbVi1ctAdgSsM4X9RRwjVg";
 
-  const optCard = document.getElementById('opt-card');
-  const optBoss = document.getElementById('opt-boss');
-  const bossFields = document.getElementById('boss-config-fields');
+  const CHECK_LIVE_INTERVAL_MS = 60000;
+  const UPDATE_LIKES_INTERVAL_MS = 15000;
 
-  optCard.addEventListener('click', () => {
-    selectedStyle = 'card';
-    optCard.classList.add('active');
-    optBoss.classList.remove('active');
-    bossFields.style.display = 'none';
-  });
+  // Determina o modo pela URL (?mode=boss ou ?mode=overlay)
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentMode = urlParams.get('mode') || 'overlay';
 
-  optBoss.addEventListener('click', () => {
-    selectedStyle = 'boss';
-    optBoss.classList.add('active');
-    optCard.classList.remove('active');
-    bossFields.style.display = 'block';
-  });
+  let lastCount = null;
+  let currentLiveVideoId = null;
+  let likesTimer = null;
 
-  document.getElementById('btn-generate').addEventListener('click', async () => {
-    const rawChannel = document.getElementById('input-channel').value.trim();
-    const apiKey = document.getElementById('input-key').value.trim();
-    const goal = document.getElementById('input-boss-goal').value;
-    const mult = document.getElementById('input-boss-mult').value;
+  function formatNumber(n) {
+    return new Intl.NumberFormat('pt-BR').format(n);
+  }
 
-    if(!rawChannel || !apiKey) {
-      alert('Preencha o canal e a API key');
-      return;
+  function updateStatus(text) {
+    if (currentMode === 'boss') {
+      document.getElementById('status-boss').textContent = text;
+    } else {
+      document.getElementById('status-overlay').textContent = text;
     }
+  }
 
-    // Resolvendo ID do Canal se necessário
-    let channelId = rawChannel;
-    let handleMatch = rawChannel.match(/@([A-Za-z0-9._-]+)/);
-    let handle = handleMatch ? '@' + handleMatch[1] : (rawChannel.startsWith('@') ? rawChannel : null);
+  // LÓGICA DO MODO OVERLAY
+  const countEl = document.getElementById('count');
+  const iconWrap = document.getElementById('icon-wrap');
+  const particlesEl = document.getElementById('particles');
+  const shockwaveEl = document.getElementById('shockwave');
+  const EMOJIS = ['❤️', '💖', '💗', '💕', '⭐'];
 
-    if(handle) {
-      try {
-        const url = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.items && data.items.length > 0) {
-          channelId = data.items[0].id;
-        }
-      } catch(e) {
-        console.error(e);
+  function bumpOverlay() {
+    countEl.classList.remove('bump');
+    iconWrap.classList.remove('pulse');
+    void countEl.offsetWidth;
+    countEl.classList.add('bump');
+    iconWrap.classList.add('pulse');
+  }
+
+  function explodeOverlay(intensity) {
+    const count = Math.min(6 + intensity * 2, 24);
+    shockwaveEl.classList.remove('go');
+    void shockwaveEl.offsetWidth;
+    shockwaveEl.classList.add('go');
+
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 60 + Math.random() * 90;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance - 20;
+
+      p.style.setProperty('--dx', `${dx}px`);
+      p.style.setProperty('--dy', `${dy}px`);
+      p.style.setProperty('--scale', (0.6 + Math.random() * 0.8).toFixed(2));
+      p.style.setProperty('--rot', `${(Math.random() * 360 - 180).toFixed(0)}deg`);
+
+      const duration = 700 + Math.random() * 500;
+      p.style.animationDuration = `${duration}ms`;
+      p.style.fontSize = `${16 + Math.random() * 14}px`;
+
+      particlesEl.appendChild(p);
+      setTimeout(() => p.remove(), duration + 50);
+    }
+  }
+
+  function handleLikesOverlay(likeCount) {
+    if (lastCount !== null && likeCount !== lastCount) {
+      bumpOverlay();
+      if (likeCount > lastCount) {
+        explodeOverlay(likeCount - lastCount);
       }
     }
+    countEl.textContent = formatNumber(likeCount);
+  }
 
-    // Cria a URL apontando para overlay.html no mesmo diretório
-    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/')) + '/overlay.html';
-    const params = new URLSearchParams({
-      style: selectedStyle,
-      channelId: channelId,
-      key: apiKey,
-      goal: goal,
-      mult: mult
-    });
+  // LÓGICA DO MODO BOSS FIGHT
+  const INITIAL_GOAL = 10;
+  const GOAL_MULTIPLIER = 2;
+  const BOSS_EMOJIS = ['👹', '🐉', '👺', '🧟', '👽', '🦖', '💀'];
+  const BOSS_NAMES = ['Boss Selvagem', 'Dragão da Madrugada', 'Guardião das Ruas', 'Zumbi Uber', 'Invasor Alien', 'Rex Noturno', 'Rei Caveira'];
 
-    const finalUrl = `${baseUrl}?${params.toString()}`;
-    
-    document.getElementById('result-url').textContent = finalUrl;
-    document.getElementById('result-box').style.display = 'block';
-  });
+  const bossCard = document.getElementById('boss-card');
+  const bossEmoji = document.getElementById('boss-emoji');
+  const bossName = document.getElementById('boss-name');
+  const bossLevel = document.getElementById('boss-level');
+  const hpFill = document.getElementById('hp-fill');
+  const hpText = document.getElementById('hp-text');
+  const hpPercent = document.getElementById('hp-percent');
+  const goalLabel = document.getElementById('goal-label');
+  const dmgLayer = document.getElementById('dmg-layer');
+  const victoryBanner = document.getElementById('victory-banner');
 
-  document.getElementById('btn-copy').addEventListener('click', () => {
-    const url = document.getElementById('result-url').textContent;
-    navigator.clipboard.writeText(url);
-    alert('Link copiado com sucesso!');
-  });
+  let bossIndex = 0;
+  let goal = INITIAL_GOAL;
+  let likesTowardGoal = 0;
+  let defeated = false;
+
+  function setupBoss() {
+    const emoji = BOSS_EMOJIS[bossIndex % BOSS_EMOJIS.length];
+    const name = BOSS_NAMES[bossIndex % BOSS_NAMES.length];
+    bossEmoji.textContent = emoji;
+    bossName.textContent = name;
+    bossLevel.textContent = `Fase ${bossIndex + 1}`;
+    goalLabel.textContent = `Meta: ${formatNumber(goal)} likes`;
+    renderHP();
+  }
+
+  function renderHP() {
+    const remaining = Math.max(goal - likesTowardGoal, 0);
+    const pct = Math.max(0, Math.min(100, (remaining / goal) * 100));
+    hpFill.style.width = pct + '%';
+    hpText.textContent = `${formatNumber(likesTowardGoal)} / ${formatNumber(goal)} likes`;
+    hpPercent.textContent = `${Math.round(pct)}% de vida`;
+  }
+
+  function shakeBoss() {
+    bossCard.classList.remove('shake');
+    void bossCard.offsetWidth;
+    bossCard.classList.add('shake');
+
+    bossEmoji.classList.remove('hit');
+    void bossEmoji.offsetWidth;
+    bossEmoji.classList.add('hit');
+  }
+
+  function popDamage(amount) {
+    const el = document.createElement('div');
+    el.className = 'dmg-pop';
+    el.textContent = `-${amount}`;
+    el.style.left = (30 + Math.random() * 40) + 'px';
+    el.style.top = (20 + Math.random() * 20) + 'px';
+    dmgLayer.appendChild(el);
+    setTimeout(() => el.remove(), 950);
+  }
+
+  function triggerVictory() {
+    defeated = true;
+    victoryBanner.classList.remove('show');
+    void victoryBanner.offsetWidth;
+    victoryBanner.classList.add('show');
+
+    setTimeout(() => {
+      bossIndex += 1;
+      goal = Math.round(goal * GOAL_MULTIPLIER);
+      likesTowardGoal = 0;
+      defeated = false;
+      setupBoss();
+    }, 2200);
+  }
+
+  function applyDamage(amount) {
+    if (defeated || amount <= 0) return;
+
+    likesTowardGoal += amount;
+    shakeBoss();
+    popDamage(amount);
+    renderHP();
+
+    if (likesTowardGoal >= goal) {
+      likesTowardGoal = goal;
+      renderHP();
+      triggerVictory();
+    }
+  }
+
+  function handleLikesBoss(likeCount) {
+    if (lastCount !== null && likeCount > lastCount) {
+      applyDamage(likeCount - lastCount);
+    }
+  }
+
+  // REQUISIÇÕES DA API DO YOUTUBE
+  async function findLiveVideo() {
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&eventType=live&type=video&key=${API_KEY}`;
+
+    try {
+      const res = await fetch(searchUrl);
+      const data = await res.json();
+
+      if (data.items && data.items.length > 0) {
+        const liveId = data.items[0].id.videoId;
+
+        if (liveId !== currentLiveVideoId) {
+          currentLiveVideoId = liveId;
+          lastCount = null;
+          updateStatus("Ao vivo agora");
+          startLikesPolling();
+        }
+      } else {
+        currentLiveVideoId = null;
+        if (currentMode === 'overlay') countEl.textContent = "--";
+        updateStatus("Aguardando live...");
+        if (likesTimer) {
+          clearInterval(likesTimer);
+          likesTimer = null;
+        }
+      }
+    } catch (err) {
+      updateStatus("Erro ao checar live");
+      console.error(err);
+    }
+  }
+
+  async function fetchLikes() {
+    if (!currentLiveVideoId) return;
+
+    const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${currentLiveVideoId}&key=${API_KEY}`;
+
+    try {
+      const res = await fetch(statsUrl);
+      const data = await res.json();
+
+      if (!data.items || data.items.length === 0) return;
+
+      const likeCount = parseInt(data.items[0].statistics.likeCount, 10);
+
+      if (currentMode === 'boss') {
+        handleLikesBoss(likeCount);
+      } else {
+        handleLikesOverlay(likeCount);
+      }
+
+      lastCount = likeCount;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function startLikesPolling() {
+    if (likesTimer) clearInterval(likesTimer);
+    fetchLikes();
+    likesTimer = setInterval(fetchLikes, UPDATE_LIKES_INTERVAL_MS);
+  }
+
+  function init() {
+    if (currentMode === 'boss') {
+      document.getElementById('boss-view').style.display = 'block';
+      document.getElementById('btn-boss').classList.add('active');
+      setupBoss();
+    } else {
+      document.getElementById('overlay-view').style.display = 'block';
+      document.getElementById('btn-overlay').classList.add('active');
+    }
+
+    findLiveVideo();
+    setInterval(findLiveVideo, CHECK_LIVE_INTERVAL_MS);
+  }
+
+  init();
 </script>
+
 </body>
 </html>
