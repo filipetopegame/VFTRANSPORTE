@@ -2,16 +2,14 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Contador de Likes - Overlay & Boss Fight</title>
+<title>Contador de Likes - Overlay</title>
 <style>
   :root {
     --pink: #FF3CAC;
     --purple: #784BA0;
     --blue: #2B86C5;
     --yellow: #FFD93D;
-    --red: #FF3B3B;
     --white: #FFFFFF;
-    --dark: #1a0b2e;
   }
 
   html, body {
@@ -22,57 +20,7 @@
     font-family: 'Segoe UI', Arial, sans-serif;
   }
 
-  /* Painel de Controle de Modos */
-  #mode-selector {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 9999;
-    display: flex;
-    gap: 12px;
-    background: rgba(26, 11, 46, 0.85);
-    padding: 10px 14px;
-    border-radius: 12px;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  }
-
-  #mode-selector a {
-    color: var(--white);
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 8px 14px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    transition: all 0.2s ease;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  #mode-selector a:hover {
-    background: linear-gradient(135deg, var(--pink), var(--purple));
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 60, 172, 0.3);
-  }
-
-  #mode-selector a.active {
-    background: linear-gradient(135deg, var(--pink), var(--blue));
-    border-color: var(--yellow);
-  }
-
-  /* Container Principal com Espaçamento do Topo */
-  #app-container {
-    padding-top: 80px;
-    padding-left: 20px;
-  }
-
-  /* ================= ESTILOS OVERLAY (MODO 1) ================= */
-  #overlay-view {
-    display: none;
-  }
-
-  #overlay-view #card {
+  #card {
     display: inline-flex;
     align-items: center;
     gap: 16px;
@@ -91,7 +39,7 @@
     100% { background-position: 0% 50%; }
   }
 
-  #overlay-view #icon-wrap {
+  #icon-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -102,12 +50,12 @@
     flex-shrink: 0;
   }
 
-  #overlay-view #icon-wrap svg {
+  #icon-wrap svg {
     width: 28px;
     height: 28px;
   }
 
-  #overlay-view #icon-wrap.pulse {
+  #icon-wrap.pulse {
     animation: pop 0.5s ease;
   }
 
@@ -118,13 +66,13 @@
     100% { transform: scale(1); }
   }
 
-  #overlay-view #text-block {
+  #text-block {
     display: flex;
     flex-direction: column;
     line-height: 1.05;
   }
 
-  #overlay-view #label {
+  #label {
     font-size: 13px;
     font-weight: 700;
     letter-spacing: 1px;
@@ -133,7 +81,7 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
 
-  #overlay-view #count {
+  #count {
     font-size: 40px;
     font-weight: 900;
     color: var(--white);
@@ -141,7 +89,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  #overlay-view #count.bump {
+  #count.bump {
     animation: bump 0.5s ease;
   }
 
@@ -151,12 +99,18 @@
     100% { transform: scale(1) translateY(0); }
   }
 
-  #overlay-view #stage {
+  #status {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 2px;
+  }
+
+  #stage {
     position: relative;
     width: fit-content;
   }
 
-  #overlay-view #particles {
+  #particles {
     position: absolute;
     top: 0;
     left: 0;
@@ -169,7 +123,7 @@
   .particle {
     position: absolute;
     top: 50%;
-    left: 54px;
+    left: 54px; /* sai de cima do ícone */
     font-size: 22px;
     opacity: 1;
     will-change: transform, opacity;
@@ -181,14 +135,19 @@
       transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
       opacity: 1;
     }
-    70% { opacity: 1; }
+    70% {
+      opacity: 1;
+    }
     100% {
-      transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--scale)) rotate(var(--rot));
+      transform:
+        translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
+        scale(var(--scale))
+        rotate(var(--rot));
       opacity: 0;
     }
   }
 
-  #overlay-view #shockwave {
+  #shockwave {
     position: absolute;
     top: 50%;
     left: 54px;
@@ -201,7 +160,7 @@
     pointer-events: none;
   }
 
-  #overlay-view #shockwave.go {
+  #shockwave.go {
     animation: shockwave-anim 0.6s ease-out;
   }
 
@@ -210,315 +169,152 @@
     100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
   }
 
-  /* ================= ESTILOS BOSS FIGHT (MODO 2) ================= */
-  #boss-view {
-    display: none;
+  #goal-wrap {
+    margin-top: 6px;
+    width: 100%;
   }
 
-  #boss-view #stage {
-    position: relative;
-    width: 480px;
-  }
-
-  #boss-view #boss-card {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px 20px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--dark), #2d1454);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
-    border: 2px solid rgba(255,255,255,0.08);
-  }
-
-  #boss-view #boss-card.shake {
-    animation: shake-anim 0.35s ease;
-  }
-
-  @keyframes shake-anim {
-    0%   { transform: translate(0, 0); }
-    20%  { transform: translate(-6px, 2px); }
-    40%  { transform: translate(5px, -2px); }
-    60%  { transform: translate(-4px, 1px); }
-    80%  { transform: translate(3px, -1px); }
-    100% { transform: translate(0, 0); }
-  }
-
-  #boss-view #boss-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  #boss-view #boss-name {
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--yellow);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  }
-
-  #boss-view #boss-level {
-    font-size: 12px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.65);
-  }
-
-  #boss-view #hp-track {
+  #goal-track {
     position: relative;
     width: 100%;
-    height: 26px;
-    background: rgba(0,0,0,0.45);
-    border-radius: 13px;
+    height: 10px;
+    background: rgba(0,0,0,0.35);
+    border-radius: 6px;
     overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.12);
   }
 
-  #boss-view #hp-fill {
+  #goal-fill {
     height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, var(--red), #ff7a5c);
-    border-radius: 13px 0 0 13px;
-    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: 0 0 12px rgba(255, 59, 59, 0.7) inset;
+    width: 0%;
+    background: linear-gradient(90deg, var(--yellow), #fff3b0);
+    border-radius: 6px;
+    transition: width 0.5s ease;
   }
 
-  #boss-view #hp-text {
+  #goal-label {
+    margin-top: 3px;
+    font-size: 10px;
+    color: rgba(255,255,255,0.8);
+    white-space: nowrap;
+  }
+
+  #goal-celebration {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--white);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-    font-variant-numeric: tabular-nums;
-  }
-
-  #boss-view #boss-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 11px;
-    color: rgba(255,255,255,0.75);
-  }
-
-  #boss-view #boss-emoji {
-    font-size: 46px;
-    line-height: 1;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
-    transform-origin: center;
-  }
-
-  #boss-view #boss-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  #boss-view #boss-emoji.hit {
-    animation: hit-anim 0.35s ease;
-  }
-
-  @keyframes hit-anim {
-    0%   { transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
-    40%  { transform: scale(0.85) rotate(-6deg); filter: brightness(2.2) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
-    100% { transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
-  }
-
-  #boss-view #dmg-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    overflow: visible;
-  }
-
-  .dmg-pop {
-    position: absolute;
-    top: 30px;
-    left: 40px;
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--yellow);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    opacity: 1;
-    animation: dmg-float 900ms ease-out forwards;
-  }
-
-  @keyframes dmg-float {
-    0%   { transform: translateY(0) scale(0.7); opacity: 1; }
-    30%  { transform: translateY(-10px) scale(1.15); opacity: 1; }
-    100% { transform: translateY(-46px) scale(1); opacity: 0; }
-  }
-
-  #boss-view #victory-banner {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 4px;
     background: radial-gradient(circle, rgba(255,217,61,0.95), rgba(255,60,172,0.9));
-    border-radius: 20px;
+    border-radius: 60px;
     opacity: 0;
     pointer-events: none;
-    transform: scale(0.8);
+    font-weight: 900;
+    font-size: 16px;
+    color: var(--purple);
+    text-align: center;
+    padding: 0 10px;
   }
 
-  #boss-view #victory-banner.show {
-    animation: victory-anim 2.2s ease forwards;
+  #goal-celebration.show {
+    animation: goal-celebration-anim 2s ease forwards;
   }
 
-  @keyframes victory-anim {
-    0%   { opacity: 0; transform: scale(0.7); }
+  @keyframes goal-celebration-anim {
+    0%   { opacity: 0; transform: scale(0.8); }
     15%  { opacity: 1; transform: scale(1.05); }
     25%  { opacity: 1; transform: scale(1); }
     85%  { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.1); }
-  }
-
-  #boss-view #victory-title {
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--dark);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-
-  #boss-view #victory-sub {
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(26,11,46,0.8);
-  }
-
-  .status-text {
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-    margin-top: 6px;
+    100% { opacity: 0; transform: scale(1.05); }
   }
 </style>
 </head>
 <body>
 
-  <!-- Menu de navegação destacado -->
-  <div id="mode-selector">
-    <a href="?mode=overlay" id="btn-overlay">Modo Overlay</a>
-    <a href="?mode=boss" id="btn-boss">Modo Boss Fight</a>
-  </div>
-
-  <div id="app-container">
-    <!-- VISÃO 1: OVERLAY -->
-    <div id="overlay-view">
-      <div id="stage">
-        <div id="card">
-          <div id="icon-wrap">
-            <svg viewBox="0 0 24 24" fill="#FF3CAC">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
-                       2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
-                       C13.09 3.81 14.76 3 16.5 3
-                       19.58 3 22 5.42 22 8.5
-                       c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
+  <div id="stage">
+    <div id="card">
+      <div id="icon-wrap">
+        <svg viewBox="0 0 24 24" fill="#FF3CAC">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+                   2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+                   C13.09 3.81 14.76 3 16.5 3
+                   19.58 3 22 5.42 22 8.5
+                   c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      </div>
+      <div id="text-block">
+        <div id="label">Likes</div>
+        <div id="count">--</div>
+        <div id="status">Procurando live...</div>
+        <div id="goal-wrap">
+          <div id="goal-track">
+            <div id="goal-fill"></div>
           </div>
-          <div id="text-block">
-            <div id="label">Likes</div>
-            <div id="count">--</div>
-            <div id="status-overlay" class="status-text">Procurando live...</div>
-          </div>
+          <div id="goal-label">Meta: -- likes</div>
         </div>
-        <div id="shockwave"></div>
-        <div id="particles"></div>
       </div>
     </div>
-
-    <!-- VISÃO 2: BOSS FIGHT -->
-    <div id="boss-view">
-      <div id="stage">
-        <div id="boss-card">
-          <div id="boss-top">
-            <div id="boss-name">Boss selvagem</div>
-            <div id="boss-level">Fase 1</div>
-          </div>
-
-          <div id="boss-header">
-            <div id="boss-emoji">👹</div>
-
-            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
-              <div id="hp-track">
-                <div id="hp-fill"></div>
-                <div id="hp-text">-- / -- likes</div>
-              </div>
-              <div id="boss-bottom">
-                <span id="hp-percent">100% de vida</span>
-                <span id="goal-label">Meta: -- likes</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="dmg-layer"></div>
-
-        <div id="victory-banner">
-          <div id="victory-title">Boss derrotado!</div>
-          <div id="victory-sub">Próximo desafio chegando...</div>
-        </div>
-      </div>
-
-      <div id="status-boss" class="status-text" style="width: 480px; text-align: center;">Procurando live...</div>
-    </div>
+    <div id="shockwave"></div>
+    <div id="particles"></div>
+    <div id="goal-celebration">🎉 Meta batida!</div>
   </div>
 
 <script>
-  // CONFIGURAÇÃO GLOBAL
-  const API_KEY = "AIzaSyD6gc0YqDR-RfhZdm5eMVgIdus3OPxL-u8";
-  const CHANNEL_ID = "@Semlimitesnigth";
+  // ======= CONFIGURAÇÃO =======
+  // Troque pelos seus dados reais:
+  // Cole aqui uma ou várias chaves. Se colocar mais de uma, o overlay troca
+  // sozinho de chave automaticamente caso uma delas trave ou estoure a cota.
+  const API_KEYS = [
+    "AIzaSyD6gc0YqDR-RfhZdm5eMVgIdus3OPxL-u8",
+    "AIzaSyAs0CjL5Eaqjup5f1ticbiU0qQKSbWmvmw",
+    "AIzaSyBT1GHRFXdSHaK88fuEe0c4Ci0MJGqB7IY",
+  ];
+  const CHANNEL_URL = "https://www.youtube.com/@IShowSpeed";  // cole o link (ou @usuário) do canal aqui, sem precisar do /live
 
-  const CHECK_LIVE_INTERVAL_MS = 60000;
-  const UPDATE_LIKES_INTERVAL_MS = 15000;
+  const CHECK_LIVE_INTERVAL_MS = 60000;   // procura se está ao vivo a cada 60s (economiza cota da API)
+  const UPDATE_LIKES_INTERVAL_MS = 15000; // atualiza os likes a cada 15s, só quando já está ao vivo
 
-  // Determina o modo pela URL (?mode=boss ou ?mode=overlay)
-  const urlParams = new URLSearchParams(window.location.search);
-  const currentMode = urlParams.get('mode') || 'overlay';
+  const INITIAL_GOAL = 10;        // meta inicial de likes
+  const GOAL_MULTIPLIER = 2;      // a meta dobra toda vez que é batida
+  const MAX_GOAL = 10000000;      // teto: para de dobrar ao chegar em 10 milhões
+  // =============================
+
+  const countEl = document.getElementById('count');
+  const iconWrap = document.getElementById('icon-wrap');
+  const statusEl = document.getElementById('status');
+  const particlesEl = document.getElementById('particles');
+  const shockwaveEl = document.getElementById('shockwave');
+  const goalFillEl = document.getElementById('goal-fill');
+  const goalLabelEl = document.getElementById('goal-label');
+  const goalCelebrationEl = document.getElementById('goal-celebration');
+
+  let currentGoal = INITIAL_GOAL;
 
   let lastCount = null;
   let currentLiveVideoId = null;
   let likesTimer = null;
+  let keyIndex = 0; // qual chave da lista está sendo usada agora
+  let resolvedChannelId = null;
+  let uploadsPlaylistId = null;
+
+  const EMOJIS = ['❤️', '💖', '💗', '💕', '⭐'];
 
   function formatNumber(n) {
     return new Intl.NumberFormat('pt-BR').format(n);
   }
 
-  function updateStatus(text) {
-    if (currentMode === 'boss') {
-      document.getElementById('status-boss').textContent = text;
-    } else {
-      document.getElementById('status-overlay').textContent = text;
-    }
-  }
-
-  // LÓGICA DO MODO OVERLAY
-  const countEl = document.getElementById('count');
-  const iconWrap = document.getElementById('icon-wrap');
-  const particlesEl = document.getElementById('particles');
-  const shockwaveEl = document.getElementById('shockwave');
-  const EMOJIS = ['❤️', '💖', '💗', '💕', '⭐'];
-
-  function bumpOverlay() {
+  function bump() {
     countEl.classList.remove('bump');
     iconWrap.classList.remove('pulse');
-    void countEl.offsetWidth;
+    void countEl.offsetWidth; // reinicia animação
     countEl.classList.add('bump');
     iconWrap.classList.add('pulse');
   }
 
-  function explodeOverlay(intensity) {
+  // Explosão de corações + onda de choque quando os likes sobem
+  function explode(intensity) {
+    // limita a quantidade de partículas pra não pesar (ex: se subiu 50 likes de uma vez)
     const count = Math.min(6 + intensity * 2, 24);
+
     shockwaveEl.classList.remove('go');
     void shockwaveEl.offsetWidth;
     shockwaveEl.classList.add('go');
@@ -531,7 +327,7 @@
       const angle = Math.random() * Math.PI * 2;
       const distance = 60 + Math.random() * 90;
       const dx = Math.cos(angle) * distance;
-      const dy = Math.sin(angle) * distance - 20;
+      const dy = Math.sin(angle) * distance - 20; // puxa levemente pra cima
 
       p.style.setProperty('--dx', `${dx}px`);
       p.style.setProperty('--dy', `${dy}px`);
@@ -547,164 +343,204 @@
     }
   }
 
-  function handleLikesOverlay(likeCount) {
-    if (lastCount !== null && likeCount !== lastCount) {
-      bumpOverlay();
-      if (likeCount > lastCount) {
-        explodeOverlay(likeCount - lastCount);
-      }
-    }
-    countEl.textContent = formatNumber(likeCount);
-  }
-
-  // LÓGICA DO MODO BOSS FIGHT
-  const INITIAL_GOAL = 10;
-  const GOAL_MULTIPLIER = 2;
-  const BOSS_EMOJIS = ['👹', '🐉', '👺', '🧟', '👽', '🦖', '💀'];
-  const BOSS_NAMES = ['Boss Selvagem', 'Dragão da Madrugada', 'Guardião das Ruas', 'Zumbi Uber', 'Invasor Alien', 'Rex Noturno', 'Rei Caveira'];
-
-  const bossCard = document.getElementById('boss-card');
-  const bossEmoji = document.getElementById('boss-emoji');
-  const bossName = document.getElementById('boss-name');
-  const bossLevel = document.getElementById('boss-level');
-  const hpFill = document.getElementById('hp-fill');
-  const hpText = document.getElementById('hp-text');
-  const hpPercent = document.getElementById('hp-percent');
-  const goalLabel = document.getElementById('goal-label');
-  const dmgLayer = document.getElementById('dmg-layer');
-  const victoryBanner = document.getElementById('victory-banner');
-
-  let bossIndex = 0;
-  let goal = INITIAL_GOAL;
-  let likesTowardGoal = 0;
-  let defeated = false;
-
-  function setupBoss() {
-    const emoji = BOSS_EMOJIS[bossIndex % BOSS_EMOJIS.length];
-    const name = BOSS_NAMES[bossIndex % BOSS_NAMES.length];
-    bossEmoji.textContent = emoji;
-    bossName.textContent = name;
-    bossLevel.textContent = `Fase ${bossIndex + 1}`;
-    goalLabel.textContent = `Meta: ${formatNumber(goal)} likes`;
-    renderHP();
-  }
-
-  function renderHP() {
-    const remaining = Math.max(goal - likesTowardGoal, 0);
-    const pct = Math.max(0, Math.min(100, (remaining / goal) * 100));
-    hpFill.style.width = pct + '%';
-    hpText.textContent = `${formatNumber(likesTowardGoal)} / ${formatNumber(goal)} likes`;
-    hpPercent.textContent = `${Math.round(pct)}% de vida`;
-  }
-
-  function shakeBoss() {
-    bossCard.classList.remove('shake');
-    void bossCard.offsetWidth;
-    bossCard.classList.add('shake');
-
-    bossEmoji.classList.remove('hit');
-    void bossEmoji.offsetWidth;
-    bossEmoji.classList.add('hit');
-  }
-
-  function popDamage(amount) {
-    const el = document.createElement('div');
-    el.className = 'dmg-pop';
-    el.textContent = `-${amount}`;
-    el.style.left = (30 + Math.random() * 40) + 'px';
-    el.style.top = (20 + Math.random() * 20) + 'px';
-    dmgLayer.appendChild(el);
-    setTimeout(() => el.remove(), 950);
-  }
-
-  function triggerVictory() {
-    defeated = true;
-    victoryBanner.classList.remove('show');
-    void victoryBanner.offsetWidth;
-    victoryBanner.classList.add('show');
-
-    setTimeout(() => {
-      bossIndex += 1;
-      goal = Math.round(goal * GOAL_MULTIPLIER);
-      likesTowardGoal = 0;
-      defeated = false;
-      setupBoss();
-    }, 2200);
-  }
-
-  function applyDamage(amount) {
-    if (defeated || amount <= 0) return;
-
-    likesTowardGoal += amount;
-    shakeBoss();
-    popDamage(amount);
-    renderHP();
-
-    if (likesTowardGoal >= goal) {
-      likesTowardGoal = goal;
-      renderHP();
-      triggerVictory();
+  // Ajusta a meta pra ser sempre a próxima "parada" acima do valor atual de likes,
+  // caso o overlay seja aberto já com a live rolando há um tempo (likes > meta inicial)
+  function catchUpGoal(likeCount) {
+    while (currentGoal < MAX_GOAL && likeCount >= currentGoal) {
+      currentGoal = Math.min(currentGoal * GOAL_MULTIPLIER, MAX_GOAL);
     }
   }
 
-  function handleLikesBoss(likeCount) {
-    if (lastCount !== null && likeCount > lastCount) {
-      applyDamage(likeCount - lastCount);
+  function renderGoal(likeCount) {
+    const pct = Math.max(0, Math.min(100, (likeCount / currentGoal) * 100));
+    goalFillEl.style.width = pct + '%';
+
+    if (currentGoal >= MAX_GOAL && likeCount >= MAX_GOAL) {
+      goalLabelEl.textContent = `Meta máxima atingida! (${formatNumber(MAX_GOAL)} likes) 🏆`;
+    } else {
+      goalLabelEl.textContent = `Meta: ${formatNumber(likeCount)} / ${formatNumber(currentGoal)} likes`;
     }
   }
 
-  // REQUISIÇÕES DA API DO YOUTUBE
+  function celebrateGoal() {
+    goalCelebrationEl.textContent = `🎉 ${formatNumber(currentGoal)} likes!`;
+    goalCelebrationEl.classList.remove('show');
+    void goalCelebrationEl.offsetWidth;
+    goalCelebrationEl.classList.add('show');
+  }
+
+  // Verifica se a meta foi batida e, se sim, dobra ela (até o teto)
+  function checkGoal(likeCount) {
+    if (currentGoal < MAX_GOAL && likeCount >= currentGoal) {
+      celebrateGoal();
+      currentGoal = Math.min(currentGoal * GOAL_MULTIPLIER, MAX_GOAL);
+    }
+    renderGoal(likeCount);
+  }
+
+  function currentKey() {
+    return API_KEYS[keyIndex];
+  }
+
+  function rotateKey() {
+    keyIndex = (keyIndex + 1) % API_KEYS.length;
+    console.warn(`Trocando pra chave #${keyIndex + 1} de ${API_KEYS.length}`);
+  }
+
+  function extractHandleOrId(raw) {
+    let text = raw.trim();
+    text = text.replace(/^https?:\/\/(www\.)?youtube\.com\//i, '');
+    text = text.replace(/\/(live|videos|featured)\/?$/i, '');
+    text = text.replace(/\/$/, '');
+
+    const channelMatch = text.match(/channel\/([A-Za-z0-9_-]+)/);
+    if (channelMatch) return { type: 'id', value: channelMatch[1] };
+
+    if (/^UC[A-Za-z0-9_-]{20,}$/.test(text)) return { type: 'id', value: text };
+
+    const handleMatch = text.match(/@([A-Za-z0-9._-]+)/);
+    if (handleMatch) return { type: 'handle', value: '@' + handleMatch[1] };
+
+    return { type: 'handle', value: '@' + text.replace(/^@/, '') };
+  }
+
+  // Resolve o link/handle pra um Channel ID de verdade (só precisa fazer 1 vez)
+  async function resolveChannelId() {
+    if (resolvedChannelId) return resolvedChannelId;
+
+    const parsed = extractHandleOrId(CHANNEL_URL);
+
+    if (parsed.type === 'id') {
+      resolvedChannelId = parsed.value;
+      return resolvedChannelId;
+    }
+
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(parsed.value)}&key=${currentKey()}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.items && data.items.length > 0) {
+      resolvedChannelId = data.items[0].id;
+      return resolvedChannelId;
+    }
+    throw new Error('Canal não encontrado');
+  }
+
+  // Passo 1: procura se o canal está ao vivo agora
+  // (usa playlistItems.list na playlist de uploads do canal — custa só 1 ponto de cota,
+  // bem diferente do search.list que custa 100 pontos e estourava rápido)
   async function findLiveVideo() {
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&eventType=live&type=video&key=${API_KEY}`;
-
     try {
-      const res = await fetch(searchUrl);
-      const data = await res.json();
+      const channelId = await resolveChannelId();
 
-      if (data.items && data.items.length > 0) {
-        const liveId = data.items[0].id.videoId;
+      if (!uploadsPlaylistId) {
+        // truque: o ID da playlist de "todos os uploads" é o Channel ID trocando o prefixo UC por UU
+        uploadsPlaylistId = 'UU' + channelId.slice(2);
+      }
 
-        if (liveId !== currentLiveVideoId) {
-          currentLiveVideoId = liveId;
+      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${uploadsPlaylistId}&maxResults=3&key=${currentKey()}`;
+      const playlistRes = await fetch(playlistUrl);
+
+      if (playlistRes.status === 403 || playlistRes.status === 429) {
+        if (API_KEYS.length > 1) {
+          rotateKey();
+          statusEl.textContent = `Trocando de chave (#${keyIndex + 1})...`;
+        } else {
+          statusEl.textContent = "Chave com problema (cota/permissão)";
+        }
+        return;
+      }
+
+      const playlistData = await playlistRes.json();
+      const videoIds = (playlistData.items || []).map(it => it.contentDetails.videoId).join(',');
+
+      if (!videoIds) {
+        setNotLive();
+        return;
+      }
+
+      // confirma qual desses vídeos recentes está realmente "ao vivo" agora
+      const statusUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${currentKey()}`;
+      const statusRes = await fetch(statusUrl);
+      const statusData = await statusRes.json();
+
+      const liveItem = (statusData.items || []).find(
+        it => it.snippet && it.snippet.liveBroadcastContent === 'live'
+      );
+
+      if (liveItem) {
+        if (liveItem.id !== currentLiveVideoId) {
+          currentLiveVideoId = liveItem.id;
           lastCount = null;
-          updateStatus("Ao vivo agora");
+          statusEl.textContent = "Ao vivo agora";
           startLikesPolling();
         }
       } else {
-        currentLiveVideoId = null;
-        if (currentMode === 'overlay') countEl.textContent = "--";
-        updateStatus("Aguardando live...");
-        if (likesTimer) {
-          clearInterval(likesTimer);
-          likesTimer = null;
-        }
+        setNotLive();
       }
     } catch (err) {
-      updateStatus("Erro ao checar live");
+      statusEl.textContent = "Erro ao checar live";
       console.error(err);
     }
   }
 
+  function setNotLive() {
+    currentLiveVideoId = null;
+    countEl.textContent = "--";
+    statusEl.textContent = "Aguardando live...";
+    if (likesTimer) {
+      clearInterval(likesTimer);
+      likesTimer = null;
+    }
+  }
+
+  // Passo 2: enquanto estiver ao vivo, atualiza o contador de likes
   async function fetchLikes() {
     if (!currentLiveVideoId) return;
 
-    const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${currentLiveVideoId}&key=${API_KEY}`;
+    const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${currentLiveVideoId}&key=${currentKey()}`;
 
     try {
       const res = await fetch(statsUrl);
+
+      // se a chave atual travou (cota estourada, chave inválida, etc), tenta a próxima
+      if (res.status === 403 || res.status === 429) {
+        if (API_KEYS.length > 1) {
+          rotateKey();
+          statusEl.textContent = `Trocando de chave (#${keyIndex + 1})...`;
+        } else {
+          statusEl.textContent = "Chave com problema (cota/permissão)";
+        }
+        return;
+      }
+
       const data = await res.json();
 
       if (!data.items || data.items.length === 0) return;
 
       const likeCount = parseInt(data.items[0].statistics.likeCount, 10);
 
-      if (currentMode === 'boss') {
-        handleLikesBoss(likeCount);
-      } else {
-        handleLikesOverlay(likeCount);
+      if (lastCount !== null && likeCount !== lastCount) {
+        bump();
+        if (likeCount > lastCount) {
+          explode(likeCount - lastCount);
+        }
       }
 
+      // ao abrir o overlay com uma live já em andamento, pula a meta pra frente
+      // até achar a próxima "parada" acima do valor atual, sem disparar celebrações antigas
+      if (lastCount === null) {
+        catchUpGoal(likeCount);
+        renderGoal(likeCount);
+      } else {
+        checkGoal(likeCount);
+      }
+
+      countEl.textContent = formatNumber(likeCount);
       lastCount = likeCount;
+      if (statusEl.textContent.startsWith('Trocando') || statusEl.textContent.startsWith('Chave')) {
+        statusEl.textContent = "Ao vivo agora";
+      }
     } catch (err) {
       console.error(err);
     }
@@ -716,21 +552,17 @@
     likesTimer = setInterval(fetchLikes, UPDATE_LIKES_INTERVAL_MS);
   }
 
-  function init() {
-    if (currentMode === 'boss') {
-      document.getElementById('boss-view').style.display = 'block';
-      document.getElementById('btn-boss').classList.add('active');
-      setupBoss();
-    } else {
-      document.getElementById('overlay-view').style.display = 'block';
-      document.getElementById('btn-overlay').classList.add('active');
+  function start() {
+    if (!API_KEYS.length || API_KEYS[0] === "SUA_API_KEY_AQUI" || !CHANNEL_URL) {
+      countEl.textContent = "Config?";
+      statusEl.textContent = "Edite API_KEYS e CHANNEL_URL no arquivo";
+      return;
     }
-
     findLiveVideo();
     setInterval(findLiveVideo, CHECK_LIVE_INTERVAL_MS);
   }
 
-  init();
+  start();
 </script>
 
 </body>
