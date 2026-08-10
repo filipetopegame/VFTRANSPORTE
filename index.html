@@ -2,568 +2,1044 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Contador de Likes - Overlay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filipe VF Transporte · Calculadora de Viagem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
 <style>
-  :root {
-    --pink: #FF3CAC;
-    --purple: #784BA0;
-    --blue: #2B86C5;
-    --yellow: #FFD93D;
-    --white: #FFFFFF;
+  :root{
+    --asphalt:#201F1D;
+    --asphalt-2:#2b2925;
+    --paper:#F5F2EA;
+    --ink:#232019;
+    --ink-soft:#6b6558;
+    --yellow:#F4C430;
+    --green:#3E7A5B;
+    --green-soft:#e7f0ea;
+    --line:#ddd6c4;
+    --danger:#b3452f;
+    --whats:#25D366;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--asphalt);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(244,196,48,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(244,196,48,0.05), transparent 40%);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:32px 16px 64px;
+  }
+  .wrap{ width:100%; max-width:520px; }
+
+  .eyebrow{
+    display:flex; align-items:center; gap:10px;
+    color:var(--yellow);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    margin-bottom:10px; font-weight:600;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px; height:2px; background:var(--yellow);
+  }
+  h1{
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-weight:800;
+    font-size:28px;
+    letter-spacing:-0.02em;
+    margin:0 0 4px;
+  }
+  .sub{
+    color:#a8a49a;
+    font-size:14px;
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+  .driver-tag{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(244,196,48,0.1);
+    border:1px solid rgba(244,196,48,0.35);
+    border-radius:20px;
+    padding:7px 14px 7px 8px;
+    margin-bottom:24px;
+    color:var(--yellow);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.02em;
+  }
+  .driver-tag .avatar{
+    width:22px;height:22px;border-radius:50%;
+    background:var(--yellow);
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;
+    font-weight:800; font-size:11px;
   }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    overflow: hidden;
-    font-family: 'Segoe UI', Arial, sans-serif;
+  .card{
+    background:var(--paper);
+    border-radius:18px;
+    padding:26px 24px 24px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
   }
 
-  #card {
-    display: inline-flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 28px 14px 18px;
-    border-radius: 60px;
-    background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
-    background-size: 200% 200%;
-    animation: flowGradient 6s ease infinite;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
-    width: fit-content;
+  /* --- route input group, signature element --- */
+  .route{
+    position:relative;
+    padding-left:34px;
+  }
+  .stop{
+    position:relative;
+    padding-bottom:20px;
+  }
+  .stop:last-child{ padding-bottom:0; }
+  .marker{
+    position:absolute;
+    left:-34px;
+    top:30px;
+    width:22px; height:22px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .marker .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--ink); border:2px solid var(--ink);
+  }
+  .stop.origin .marker .dot{ background:var(--green); border-color:var(--green); }
+  .stop.dest .marker svg{ width:16px;height:16px; }
+  .stop.waypoint .marker .dot{
+    width:8px;height:8px; background:var(--yellow); border:2px solid var(--yellow);
+  }
+  .track{
+    position:absolute;
+    left:-24px;
+    top:40px;
+    bottom:40px;
+    width:2px;
+    background-image:linear-gradient(var(--ink-soft) 60%, transparent 40%);
+    background-size:2px 10px;
+    background-repeat:repeat-y;
+    opacity:.35;
   }
 
-  @keyframes flowGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    font-weight:600;
+  }
+  .input-row{
+    display:flex; gap:8px; align-items:stretch;
+  }
+  input[type=text], input[type=number]{
+    width:100%;
+    padding:11px 13px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus, input[type=number]:focus{
+    border-color:var(--yellow);
+    box-shadow:0 0 0 3px rgba(244,196,48,0.25);
+  }
+  input::placeholder{ color:#b8b2a2; }
+  input[readonly]{ background:#f2efe6; color:var(--ink-soft); }
+
+  .pin-btn{
+    flex:none;
+    width:40px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s, background .15s;
+  }
+  .pin-btn svg{ width:17px; height:17px; }
+  .pin-btn:hover{ border-color:var(--yellow); background:#fffaf0; }
+  .pin-btn.active{ background:var(--yellow); border-color:var(--yellow); }
+
+  .remove-stop{
+    margin-top:8px;
+    background:none; border:none;
+    color:var(--danger);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.05em;
+    cursor:pointer; padding:0;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .remove-stop:hover{ text-decoration:underline; }
+
+  .add-stop{
+    margin:2px 0 20px 0;
+    width:100%;
+    padding:10px;
+    border-radius:9px;
+    border:1.5px dashed #c8c1ac;
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.06em; text-transform:uppercase; font-weight:600;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .add-stop:hover{ border-color:var(--ink-soft); color:var(--ink); }
+
+  /* --- map --- */
+  .map-section{
+    margin-bottom:20px;
+  }
+  .map-status{
+    display:none;
+    align-items:center; gap:8px;
+    background:var(--green-soft);
+    color:var(--green);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px; font-weight:700; letter-spacing:.04em;
+    padding:9px 12px;
+    border-radius:8px 8px 0 0;
+  }
+  .map-status.show{ display:flex; }
+  .map-status .pulse{
+    width:7px;height:7px;border-radius:50%;background:var(--green);
+    animation:pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
+  #map{
+    width:100%;
+    height:230px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+  }
+  .map-status.show + #map{ border-radius:0 0 12px 12px; border-top:none; }
+  .map-hint{
+    font-size:11.5px; color:var(--ink-soft); margin:8px 2px 0; line-height:1.4;
   }
 
-  #icon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 54px;
-    height: 54px;
-    background: var(--white);
-    border-radius: 50%;
-    flex-shrink: 0;
+  .row2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:8px;
+  }
+  .preco-fixo{
+    display:flex; align-items:center; gap:8px;
+    padding:11px 13px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#f2efe6;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .preco-fixo small{
+    font-family:'Inter',sans-serif; font-weight:400; font-size:10.5px;
+    color:var(--ink-soft); text-transform:none; letter-spacing:0; display:block; margin-top:1px;
   }
 
-  #icon-wrap svg {
-    width: 28px;
-    height: 28px;
+  .toggle-line{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 2px 4px;
+    margin-bottom:18px;
+  }
+  .toggle-line .txt{ font-size:13.5px; font-weight:600; }
+  .toggle-line .txt small{ display:block; font-weight:400; color:var(--ink-soft); font-size:11.5px; margin-top:1px;}
+  .switch{
+    position:relative; width:42px; height:24px; flex:none;
+  }
+  .switch input{ opacity:0; width:0; height:0; position:absolute; }
+  .slider{
+    position:absolute; inset:0; background:#d9d3c2; border-radius:20px; cursor:pointer;
+    transition:background .15s;
+  }
+  .slider::before{
+    content:""; position:absolute; width:18px; height:18px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:transform .15s;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .slider{ background:var(--green); }
+  .switch input:checked + .slider::before{ transform:translateX(18px); }
+
+  .calc-btn{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:var(--ink);
+    color:var(--yellow);
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    font-size:13.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .1s, background .15s;
+  }
+  .calc-btn:hover{ background:#33302a; }
+  .calc-btn:active{ transform:scale(0.98); }
+  .calc-btn:disabled{ opacity:.55; cursor:default; transform:none; }
+
+  .msg{
+    margin-top:14px;
+    font-size:13px;
+    padding:11px 13px;
+    border-radius:9px;
+    background:#fbe9e4;
+    color:var(--danger);
+    display:none;
+    line-height:1.4;
+  }
+  .msg.show{ display:block; }
+
+  /* --- result --- */
+  .result{
+    margin-top:22px;
+    padding-top:20px;
+    border-top:1.5px dashed var(--line);
+    display:none;
+  }
+  .result.show{ display:block; }
+  .legs{
+    display:flex; flex-direction:column; gap:9px;
+    margin-bottom:16px;
+  }
+  .leg{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:13px;
+  }
+  .leg .path{ color:var(--ink-soft); }
+  .leg .km{ font-family:'IBM Plex Mono',monospace; color:var(--ink); font-weight:600; }
+
+  .total-box{
+    background:var(--green-soft);
+    border-radius:12px;
+    padding:18px 20px;
+    text-align:center;
+  }
+  .total-box .lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--green); font-weight:700; margin-bottom:6px;
+  }
+  .total-box .val{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:34px; font-weight:700; color:var(--ink);
+    letter-spacing:-0.01em;
+  }
+  .total-box .km-total{
+    margin-top:4px; font-size:12.5px; color:var(--ink-soft);
   }
 
-  #icon-wrap.pulse {
-    animation: pop 0.5s ease;
+  .whats-btn{
+    width:100%;
+    margin-top:14px;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:var(--whats);
+    color:#fff;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    cursor:pointer;
+    transition:background .15s, transform .1s;
+  }
+  .whats-btn:hover{ background:#1fb955; }
+  .whats-btn:active{ transform:scale(0.98); }
+  .whats-btn svg{ width:19px; height:19px; }
+
+  .loading-dots::after{
+    content:'';
+    display:inline-block;
+    animation:dots 1.2s steps(4,end) infinite;
+  }
+  @keyframes dots{
+    0%{content:'';} 25%{content:'.';} 50%{content:'..';} 75%{content:'...';} 100%{content:'';}
   }
 
-  @keyframes pop {
-    0%   { transform: scale(1); }
-    30%  { transform: scale(1.35); }
-    60%  { transform: scale(0.9); }
-    100% { transform: scale(1); }
+  .footnote{
+    text-align:center; margin-top:16px; font-size:11.5px; color:#8a8578; line-height:1.6;
   }
+  .footnote .phone{ color:#b8b2a2; font-family:'IBM Plex Mono',monospace; }
 
-  #text-block {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.05;
+  .leaflet-div-icon{ background:transparent !important; border:none !important; }
+  .map-pin-origin{ width:16px;height:16px;border-radius:50%;background:var(--green);border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); }
+  .map-pin-dest{ width:16px;height:16px;border-radius:50% 50% 50% 0;background:var(--ink);border:3px solid var(--yellow); transform:rotate(-45deg); box-shadow:0 1px 4px rgba(0,0,0,.4); }
+  .map-pin-wp{ width:12px;height:12px;border-radius:50%;background:var(--yellow);border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); }
+  .map-pin-user{ width:16px;height:16px;border-radius:50%;background:#2b7de9;border:3px solid #fff; box-shadow:0 0 0 5px rgba(43,125,233,0.28); }
+
+  /* --- botão de localização --- */
+  .locate-btn{
+    flex:none;
+    width:40px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .15s, background .15s;
   }
+  .locate-btn svg{ width:17px; height:17px; }
+  .locate-btn:hover{ border-color:#2b7de9; background:#f0f6ff; }
+  .locate-btn.loading{ opacity:.55; cursor:default; }
+  .locate-btn.loading svg{ animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
 
-  #label {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--yellow);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  .time-total{
+    margin-top:4px; font-size:12.5px; color:var(--ink-soft);
   }
+  .time-total strong{ color:var(--ink); font-family:'IBM Plex Mono',monospace; }
 
-  #count {
-    font-size: 40px;
-    font-weight: 900;
-    color: var(--white);
-    text-shadow: 0 2px 6px rgba(0,0,0,0.45);
-    font-variant-numeric: tabular-nums;
+  .receipt-btn{
+    width:100%;
+    margin-top:10px;
+    padding:14px;
+    border:1.5px solid var(--ink);
+    border-radius:10px;
+    background:transparent;
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    cursor:pointer;
+    transition:background .15s, transform .1s;
   }
+  .receipt-btn:hover{ background:#efeadb; }
+  .receipt-btn:active{ transform:scale(0.98); }
+  .receipt-btn svg{ width:18px; height:18px; }
 
-  #count.bump {
-    animation: bump 0.5s ease;
+  /* --- modal do recibo --- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(32,31,29,0.72);
+    z-index:1000;
+    align-items:flex-start; justify-content:center;
+    padding:32px 16px;
+    overflow-y:auto;
   }
-
-  @keyframes bump {
-    0%   { transform: scale(1) translateY(0); }
-    40%  { transform: scale(1.15) translateY(-4px); }
-    100% { transform: scale(1) translateY(0); }
+  .modal-overlay.show{ display:flex; }
+  .receipt-card{
+    width:100%; max-width:380px;
+    background:#fff;
+    border-radius:16px;
+    padding:0 0 20px;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    overflow:hidden;
   }
-
-  #status {
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-    margin-top: 2px;
+  .receipt-head{
+    background:var(--ink);
+    color:var(--yellow);
+    padding:22px 22px 18px;
+    text-align:center;
   }
-
-  #stage {
-    position: relative;
-    width: fit-content;
+  .receipt-head .r-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    font-weight:700; margin-bottom:4px;
   }
-
-  #particles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-    pointer-events: none;
+  .receipt-head .r-sub{ color:#c9c4b6; font-size:12px; }
+  .receipt-body{ padding:20px 22px 4px; }
+  .receipt-row{
+    display:flex; justify-content:space-between; gap:10px;
+    padding:9px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:13px;
   }
-
-  .particle {
-    position: absolute;
-    top: 50%;
-    left: 54px; /* sai de cima do ícone */
-    font-size: 22px;
-    opacity: 1;
-    will-change: transform, opacity;
-    animation: explode-anim linear forwards;
+  .receipt-row:last-child{ border-bottom:none; }
+  .receipt-row .r-lbl{ color:var(--ink-soft); flex:none; }
+  .receipt-row .r-val{ text-align:right; font-weight:600; }
+  .receipt-route{ padding:16px 22px 4px; }
+  .receipt-route .r-stop{
+    display:flex; gap:10px; align-items:flex-start;
+    font-size:12.5px; padding:5px 0;
+    color:var(--ink);
   }
-
-  @keyframes explode-anim {
-    0% {
-      transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
-      opacity: 1;
-    }
-    70% {
-      opacity: 1;
-    }
-    100% {
-      transform:
-        translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
-        scale(var(--scale))
-        rotate(var(--rot));
-      opacity: 0;
-    }
+  .receipt-route .r-stop .r-dot{
+    width:8px;height:8px;border-radius:50%;flex:none;margin-top:4px;
+    background:var(--ink-soft);
   }
-
-  #shockwave {
-    position: absolute;
-    top: 50%;
-    left: 54px;
-    width: 54px;
-    height: 54px;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 3px solid var(--yellow);
-    opacity: 0;
-    pointer-events: none;
+  .receipt-route .r-stop.o .r-dot{ background:var(--green); }
+  .receipt-route .r-stop.d .r-dot{ background:var(--yellow); border:1.5px solid var(--ink); }
+  .receipt-total{
+    margin:14px 22px 0;
+    background:var(--green-soft);
+    border-radius:12px;
+    padding:16px 18px;
+    text-align:center;
   }
-
-  #shockwave.go {
-    animation: shockwave-anim 0.6s ease-out;
+  .receipt-total .lbl{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--green); font-weight:700; margin-bottom:4px;
   }
-
-  @keyframes shockwave-anim {
-    0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.9; }
-    100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+  .receipt-total .val{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:28px; font-weight:700; color:var(--ink);
   }
-
-  #goal-wrap {
-    margin-top: 6px;
-    width: 100%;
+  .receipt-foot{
+    text-align:center; margin:16px 22px 0; font-size:11px; color:var(--ink-soft); line-height:1.6;
   }
-
-  #goal-track {
-    position: relative;
-    width: 100%;
-    height: 10px;
-    background: rgba(0,0,0,0.35);
-    border-radius: 6px;
-    overflow: hidden;
+  .receipt-actions{
+    display:flex; gap:10px; margin:18px 22px 0;
   }
-
-  #goal-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--yellow), #fff3b0);
-    border-radius: 6px;
-    transition: width 0.5s ease;
+  .receipt-actions button{
+    flex:1;
+    padding:12px;
+    border-radius:9px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    cursor:pointer;
+    border:1.5px solid var(--line);
+    background:#fff;
   }
+  .receipt-actions .print-btn{ background:var(--ink); color:var(--yellow); border-color:var(--ink); }
+  .receipt-actions .close-btn:hover{ border-color:var(--ink-soft); }
+  .receipt-actions .print-btn:hover{ background:#33302a; }
 
-  #goal-label {
-    margin-top: 3px;
-    font-size: 10px;
-    color: rgba(255,255,255,0.8);
-    white-space: nowrap;
-  }
-
-  #goal-celebration {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle, rgba(255,217,61,0.95), rgba(255,60,172,0.9));
-    border-radius: 60px;
-    opacity: 0;
-    pointer-events: none;
-    font-weight: 900;
-    font-size: 16px;
-    color: var(--purple);
-    text-align: center;
-    padding: 0 10px;
-  }
-
-  #goal-celebration.show {
-    animation: goal-celebration-anim 2s ease forwards;
-  }
-
-  @keyframes goal-celebration-anim {
-    0%   { opacity: 0; transform: scale(0.8); }
-    15%  { opacity: 1; transform: scale(1.05); }
-    25%  { opacity: 1; transform: scale(1); }
-    85%  { opacity: 1; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.05); }
+  @media print{
+    body *{ visibility:hidden; }
+    #receiptCard, #receiptCard *{ visibility:visible; }
+    #receiptCard{ position:absolute; left:0; top:0; width:100%; box-shadow:none; }
+    .receipt-actions{ display:none; }
   }
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="eyebrow">Rota &amp; Tarifa</div>
+  <h1>Calculadora de viagem</h1>
+  <p class="sub">Preencha o trajeto (digitando ou marcando no mapa) para gerar o preço da corrida.</p>
+  <div class="driver-tag"><span class="avatar">F</span> Filipe VF Transporte · (21) 99297-6849</div>
 
-  <div id="stage">
-    <div id="card">
-      <div id="icon-wrap">
-        <svg viewBox="0 0 24 24" fill="#FF3CAC">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
-                   2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
-                   C13.09 3.81 14.76 3 16.5 3
-                   19.58 3 22 5.42 22 8.5
-                   c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-        </svg>
+  <div class="card">
+    <div class="route" id="route">
+      <div class="track"></div>
+
+      <div class="stop origin">
+        <div class="marker"><div class="dot"></div></div>
+        <label for="origem">Endereço de partida</label>
+        <div class="input-row">
+          <input type="text" id="origem" placeholder="Ex: Rua das Flores, 123 - Centro">
+          <button class="locate-btn" type="button" id="locateBtn" title="Usar minha localização atual">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#2b7de9"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#2b7de9" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <button class="pin-btn" type="button" data-target="origem" title="Marcar no mapa">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13z" stroke="#232019" stroke-width="1.8"/><circle cx="12" cy="9" r="2.2" fill="#232019"/></svg>
+          </button>
+        </div>
+        <div class="map-hint" id="locateHint" style="display:none;"></div>
       </div>
-      <div id="text-block">
-        <div id="label">Likes</div>
-        <div id="count">--</div>
-        <div id="status">Procurando live...</div>
-        <div id="goal-wrap">
-          <div id="goal-track">
-            <div id="goal-fill"></div>
-          </div>
-          <div id="goal-label">Meta: -- likes</div>
+
+      <div id="waypoints"></div>
+
+      <div class="stop dest">
+        <div class="marker">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13z" fill="#232019"/>
+            <circle cx="12" cy="9" r="2.4" fill="#F4C430"/>
+          </svg>
+        </div>
+        <label for="destino">Endereço de destino</label>
+        <div class="input-row">
+          <input type="text" id="destino" placeholder="Ex: Av. Brasil, 900 - Bairro Novo">
+          <button class="pin-btn" type="button" data-target="destino" title="Marcar no mapa">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13z" stroke="#232019" stroke-width="1.8"/><circle cx="12" cy="9" r="2.2" fill="#232019"/></svg>
+          </button>
         </div>
       </div>
     </div>
-    <div id="shockwave"></div>
-    <div id="particles"></div>
-    <div id="goal-celebration">🎉 Meta batida!</div>
+
+    <button class="add-stop" id="addStopBtn" type="button">+ Adicionar parada</button>
+
+    <div class="map-section">
+      <div class="map-status" id="mapStatus"><span class="pulse"></span><span id="mapStatusText">Toque no mapa para marcar</span></div>
+      <div id="map"></div>
+      <div class="map-hint">Clique no ícone de pino ao lado de um endereço e depois toque no mapa para marcar o local.</div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label for="preco">Valor por km</label>
+        <div class="preco-fixo">R$ 2,00<small>fixo, já incluso no sistema</small></div>
+        <input type="hidden" id="preco" value="2.00">
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <div style="font-size:12px;color:var(--ink-soft);padding-top:9px;">Cada km rodado soma R$ 2,00 ao valor total.</div>
+      </div>
+    </div>
+
+    <div class="toggle-line">
+      <div class="txt">Ida e volta
+        <small>Duplica a distância total do trajeto</small>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="idaVolta">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button class="calc-btn" id="calcBtn" type="button">Calcular valor da viagem</button>
+    <div class="msg" id="msg"></div>
+
+    <div class="result" id="result">
+      <div class="legs" id="legs"></div>
+      <div class="total-box">
+        <div class="lbl">Valor total da viagem</div>
+        <div class="val" id="valTotal">R$ 0,00</div>
+        <div class="km-total" id="kmTotal"></div>
+        <div class="time-total" id="timeTotal"></div>
+      </div>
+      <button class="whats-btn" id="whatsBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.29-.15-1.7-.84-1.97-.93-.26-.1-.46-.15-.65.14-.2.3-.75.93-.92 1.12-.17.2-.34.22-.63.08-.29-.15-1.22-.45-2.33-1.44-.86-.77-1.44-1.72-1.6-2.02-.17-.3-.02-.46.13-.6.13-.13.29-.34.44-.51.15-.17.2-.3.29-.5.1-.2.05-.37-.02-.51-.08-.15-.65-1.58-.9-2.16-.24-.58-.48-.5-.65-.5-.17-.01-.37-.01-.56-.01-.2 0-.51.07-.78.37-.26.3-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.15.2 2.06 3.16 5 4.43.7.3 1.24.48 1.67.62.7.22 1.34.19 1.84.11.56-.08 1.7-.7 1.95-1.36.24-.67.24-1.24.17-1.36-.07-.12-.26-.2-.55-.34z"/><path d="M12.02 2C6.5 2 2.02 6.48 2.02 12c0 1.85.5 3.58 1.36 5.07L2 22l5.08-1.33A9.96 9.96 0 0 0 12.02 22C17.55 22 22 17.52 22 12S17.55 2 12.02 2zm0 18.2c-1.62 0-3.13-.46-4.4-1.26l-.32-.19-3.02.79.8-2.94-.2-.32A8.18 8.18 0 0 1 3.82 12c0-4.53 3.68-8.2 8.2-8.2 4.52 0 8.2 3.67 8.2 8.2 0 4.52-3.68 8.2-8.2 8.2z"/></svg>
+        Enviar para Filipe VF Transporte (WhatsApp)
+      </button>
+      <button class="receipt-btn" id="receiptBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z" stroke="#232019" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 7h7M8.5 10.5h7M8.5 14h4" stroke="#232019" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Gerar recibo da corrida
+      </button>
+    </div>
   </div>
 
+  <div class="footnote">Distâncias calculadas por rota de carro via OpenStreetMap (OSRM).<br>Motorista: Filipe · <span class="phone">(21) 99297-6849</span></div>
+</div>
+
+<div class="modal-overlay" id="receiptOverlay">
+  <div class="receipt-card" id="receiptCard">
+    <div class="receipt-head">
+      <div class="r-title">Recibo de Corrida</div>
+      <div class="r-sub" id="receiptCode"></div>
+    </div>
+    <div class="receipt-route" id="receiptRoute"></div>
+    <div class="receipt-body">
+      <div class="receipt-row"><span class="r-lbl">Data</span><span class="r-val" id="receiptDate"></span></div>
+      <div class="receipt-row"><span class="r-lbl">Distância</span><span class="r-val" id="receiptKm"></span></div>
+      <div class="receipt-row"><span class="r-lbl">Tempo estimado</span><span class="r-val" id="receiptTime"></span></div>
+      <div class="receipt-row"><span class="r-lbl">Valor por km</span><span class="r-val" id="receiptPerKm"></span></div>
+      <div class="receipt-row"><span class="r-lbl">Motorista</span><span class="r-val">Filipe</span></div>
+    </div>
+    <div class="receipt-total">
+      <div class="lbl">Valor total</div>
+      <div class="val" id="receiptTotal">R$ 0,00</div>
+    </div>
+    <div class="receipt-foot">Filipe VF Transporte · (21) 99297-6849<br>Obrigado pela preferência!</div>
+    <div class="receipt-actions">
+      <button class="close-btn" id="receiptCloseBtn" type="button">Fechar</button>
+      <button class="print-btn" id="receiptPrintBtn" type="button">Imprimir / PDF</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
-  // ======= CONFIGURAÇÃO =======
-  // Troque pelos seus dados reais:
-  // Cole aqui uma ou várias chaves. Se colocar mais de uma, o overlay troca
-  // sozinho de chave automaticamente caso uma delas trave ou estoure a cota.
-  const API_KEYS = [
-    "AIzaSyD6gc0YqDR-RfhZdm5eMVgIdus3OPxL-u8",
-    "AIzaSyAs0CjL5Eaqjup5f1ticbiU0qQKSbWmvmw",
-    "AIzaSyBT1GHRFXdSHaK88fuEe0c4Ci0MJGqB7IY",
-  ];
-  const CHANNEL_URL = "https://www.youtube.com/@CANALFILIPE2";  // cole o link (ou @usuário) do canal aqui, sem precisar do /live
+let waypointCount = 0;
+const PRECO_KM = 2.00; // valor por km fixo, já incluso no sistema
+const WHATSAPP_NUMERO = '5521992976849'; // (21) 99297-6849
 
-  const CHECK_LIVE_INTERVAL_MS = 60000;   // procura se está ao vivo a cada 60s (economiza cota da API)
-  const UPDATE_LIKES_INTERVAL_MS = 15000; // atualiza os likes a cada 15s, só quando já está ao vivo
+// coordenadas marcadas manualmente no mapa, por id do campo de endereço
+const stopCoords = {}; // { origem: {lat,lon}, destino: {lat,lon}, wp_123: {lat,lon} }
+const mapMarkers = {}; // marcadores Leaflet por id
 
-  const INITIAL_GOAL = 10;        // meta inicial de likes
-  const GOAL_MULTIPLIER = 2;      // a meta dobra toda vez que é batida
-  const MAX_GOAL = 10000000;      // teto: para de dobrar ao chegar em 10 milhões
-  // =============================
+let pickTarget = null; // qual campo está aguardando clique no mapa
 
-  const countEl = document.getElementById('count');
-  const iconWrap = document.getElementById('icon-wrap');
-  const statusEl = document.getElementById('status');
-  const particlesEl = document.getElementById('particles');
-  const shockwaveEl = document.getElementById('shockwave');
-  const goalFillEl = document.getElementById('goal-fill');
-  const goalLabelEl = document.getElementById('goal-label');
-  const goalCelebrationEl = document.getElementById('goal-celebration');
+// ----- mapa -----
+const map = L.map('map', { zoomControl: true }).setView([-22.9068, -43.1729], 12); // Rio de Janeiro como ponto de partida
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap',
+  maxZoom: 19
+}).addTo(map);
 
-  let currentGoal = INITIAL_GOAL;
+function iconFor(kind){
+  const cls = kind === 'origem' ? 'map-pin-origin' : (kind === 'destino' ? 'map-pin-dest' : 'map-pin-wp');
+  return L.divIcon({ className: 'leaflet-div-icon', html: `<div class="${cls}"></div>`, iconSize:[16,16], iconAnchor:[8,8] });
+}
 
-  let lastCount = null;
-  let currentLiveVideoId = null;
-  let likesTimer = null;
-  let keyIndex = 0; // qual chave da lista está sendo usada agora
-  let resolvedChannelId = null;
-  let uploadsPlaylistId = null;
+function stopKindFor(id){
+  if(id === 'origem') return 'origem';
+  if(id === 'destino') return 'destino';
+  return 'waypoint';
+}
 
-  const EMOJIS = ['❤️', '💖', '💗', '💕', '⭐'];
+function setPickTarget(id){
+  pickTarget = id;
+  document.querySelectorAll('.pin-btn').forEach(b => b.classList.toggle('active', b.dataset.target === id));
+  const status = document.getElementById('mapStatus');
+  const label = id === 'origem' ? 'partida' : (id === 'destino' ? 'destino' : 'parada');
+  document.getElementById('mapStatusText').textContent = 'Toque no mapa para marcar a ' + label;
+  status.classList.add('show');
+  document.getElementById('map').scrollIntoView({ behavior:'smooth', block:'center' });
+}
 
-  function formatNumber(n) {
-    return new Intl.NumberFormat('pt-BR').format(n);
-  }
-
-  function bump() {
-    countEl.classList.remove('bump');
-    iconWrap.classList.remove('pulse');
-    void countEl.offsetWidth; // reinicia animação
-    countEl.classList.add('bump');
-    iconWrap.classList.add('pulse');
-  }
-
-  // Explosão de corações + onda de choque quando os likes sobem
-  function explode(intensity) {
-    // limita a quantidade de partículas pra não pesar (ex: se subiu 50 likes de uma vez)
-    const count = Math.min(6 + intensity * 2, 24);
-
-    shockwaveEl.classList.remove('go');
-    void shockwaveEl.offsetWidth;
-    shockwaveEl.classList.add('go');
-
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 60 + Math.random() * 90;
-      const dx = Math.cos(angle) * distance;
-      const dy = Math.sin(angle) * distance - 20; // puxa levemente pra cima
-
-      p.style.setProperty('--dx', `${dx}px`);
-      p.style.setProperty('--dy', `${dy}px`);
-      p.style.setProperty('--scale', (0.6 + Math.random() * 0.8).toFixed(2));
-      p.style.setProperty('--rot', `${(Math.random() * 360 - 180).toFixed(0)}deg`);
-
-      const duration = 700 + Math.random() * 500;
-      p.style.animationDuration = `${duration}ms`;
-      p.style.fontSize = `${16 + Math.random() * 14}px`;
-
-      particlesEl.appendChild(p);
-      setTimeout(() => p.remove(), duration + 50);
-    }
-  }
-
-  // Ajusta a meta pra ser sempre a próxima "parada" acima do valor atual de likes,
-  // caso o overlay seja aberto já com a live rolando há um tempo (likes > meta inicial)
-  function catchUpGoal(likeCount) {
-    while (currentGoal < MAX_GOAL && likeCount >= currentGoal) {
-      currentGoal = Math.min(currentGoal * GOAL_MULTIPLIER, MAX_GOAL);
-    }
-  }
-
-  function renderGoal(likeCount) {
-    const pct = Math.max(0, Math.min(100, (likeCount / currentGoal) * 100));
-    goalFillEl.style.width = pct + '%';
-
-    if (currentGoal >= MAX_GOAL && likeCount >= MAX_GOAL) {
-      goalLabelEl.textContent = `Meta máxima atingida! (${formatNumber(MAX_GOAL)} likes) 🏆`;
-    } else {
-      goalLabelEl.textContent = `Meta: ${formatNumber(likeCount)} / ${formatNumber(currentGoal)} likes`;
-    }
-  }
-
-  function celebrateGoal() {
-    goalCelebrationEl.textContent = `🎉 ${formatNumber(currentGoal)} likes!`;
-    goalCelebrationEl.classList.remove('show');
-    void goalCelebrationEl.offsetWidth;
-    goalCelebrationEl.classList.add('show');
-  }
-
-  // Verifica se a meta foi batida e, se sim, dobra ela (até o teto)
-  function checkGoal(likeCount) {
-    if (currentGoal < MAX_GOAL && likeCount >= currentGoal) {
-      celebrateGoal();
-      currentGoal = Math.min(currentGoal * GOAL_MULTIPLIER, MAX_GOAL);
-    }
-    renderGoal(likeCount);
-  }
-
-  function currentKey() {
-    return API_KEYS[keyIndex];
-  }
-
-  function rotateKey() {
-    keyIndex = (keyIndex + 1) % API_KEYS.length;
-    console.warn(`Trocando pra chave #${keyIndex + 1} de ${API_KEYS.length}`);
-  }
-
-  function extractHandleOrId(raw) {
-    let text = raw.trim();
-    text = text.replace(/^https?:\/\/(www\.)?youtube\.com\//i, '');
-    text = text.replace(/\/(live|videos|featured)\/?$/i, '');
-    text = text.replace(/\/$/, '');
-
-    const channelMatch = text.match(/channel\/([A-Za-z0-9_-]+)/);
-    if (channelMatch) return { type: 'id', value: channelMatch[1] };
-
-    if (/^UC[A-Za-z0-9_-]{20,}$/.test(text)) return { type: 'id', value: text };
-
-    const handleMatch = text.match(/@([A-Za-z0-9._-]+)/);
-    if (handleMatch) return { type: 'handle', value: '@' + handleMatch[1] };
-
-    return { type: 'handle', value: '@' + text.replace(/^@/, '') };
-  }
-
-  // Resolve o link/handle pra um Channel ID de verdade (só precisa fazer 1 vez)
-  async function resolveChannelId() {
-    if (resolvedChannelId) return resolvedChannelId;
-
-    const parsed = extractHandleOrId(CHANNEL_URL);
-
-    if (parsed.type === 'id') {
-      resolvedChannelId = parsed.value;
-      return resolvedChannelId;
-    }
-
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${encodeURIComponent(parsed.value)}&key=${currentKey()}`;
-    const res = await fetch(url);
+async function reverseGeocode(lat, lon){
+  try{
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if(!res.ok) return null;
     const data = await res.json();
+    return data && data.display_name ? data.display_name : null;
+  }catch(e){ return null; }
+}
 
-    if (data.items && data.items.length > 0) {
-      resolvedChannelId = data.items[0].id;
-      return resolvedChannelId;
+async function placeMarkerForTarget(id, lat, lon){
+  if(mapMarkers[id]) map.removeLayer(mapMarkers[id]);
+  const marker = L.marker([lat, lon], { icon: iconFor(stopKindFor(id)) }).addTo(map);
+  mapMarkers[id] = marker;
+  stopCoords[id] = { lat, lon };
+
+  const input = document.getElementById(id) || document.querySelector(`[data-wp-target="${id}"]`);
+  if(input){
+    input.value = `Marcado no mapa (${lat.toFixed(5)}, ${lon.toFixed(5)})`;
+    const nome = await reverseGeocode(lat, lon);
+    if(nome){ input.value = nome; }
+  }
+}
+
+map.on('click', async (e) => {
+  if(!pickTarget) return;
+  const id = pickTarget;
+  await placeMarkerForTarget(id, e.latlng.lat, e.latlng.lng);
+  pickTarget = null;
+  document.querySelectorAll('.pin-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mapStatus').classList.remove('show');
+});
+
+// ----- localização atual do passageiro -----
+let userMarker = null;
+
+document.getElementById('locateBtn').addEventListener('click', () => {
+  const btn = document.getElementById('locateBtn');
+  const hint = document.getElementById('locateHint');
+  hint.style.display = 'block';
+
+  if(!navigator.geolocation){
+    hint.textContent = 'Seu navegador não suporta localização automática. Marque o ponto no mapa.';
+    return;
+  }
+
+  if(!window.isSecureContext){
+    hint.textContent = 'A localização automática só funciona em páginas com HTTPS (ex: GitHub Pages) ou em localhost. Abrindo o arquivo direto do computador (file://), o navegador bloqueia. Marque o ponto no mapa manualmente por enquanto.';
+    return;
+  }
+
+  btn.classList.add('loading');
+  hint.textContent = 'Buscando sua localização... (seu navegador vai pedir permissão, toque em "Permitir")';
+
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude, longitude } = pos.coords;
+
+    if(userMarker) map.removeLayer(userMarker);
+    userMarker = L.marker([latitude, longitude], {
+      icon: L.divIcon({ className:'leaflet-div-icon', html:'<div class="map-pin-user"></div>', iconSize:[16,16], iconAnchor:[8,8] })
+    }).addTo(map);
+
+    map.invalidateSize();
+    map.setView([latitude, longitude], 15);
+
+    btn.classList.remove('loading');
+    hint.textContent = 'Localizando endereço...';
+
+    try{
+      await placeMarkerForTarget('origem', latitude, longitude);
+      hint.textContent = 'Localização atual definida como partida. Agora escolha para onde ir digitando o endereço ou tocando no mapa.';
+    }catch(e){
+      hint.textContent = 'Sua posição foi marcada no mapa, mas não foi possível identificar o endereço automaticamente. Você pode digitar o endereço de partida manualmente.';
     }
-    throw new Error('Canal não encontrado');
+
+    document.getElementById('map').scrollIntoView({ behavior:'smooth', block:'center' });
+  }, (err) => {
+    btn.classList.remove('loading');
+    let msg = 'Não foi possível obter sua localização (erro: ' + err.code + ' - ' + err.message + ').';
+    if(err.code === 1) msg = 'Permissão de localização negada. Verifique o ícone de cadeado/localização na barra de endereço do navegador, permita o acesso e tente novamente. Ou marque o ponto no mapa.';
+    else if(err.code === 2) msg = 'Localização indisponível no momento (GPS/rede sem sinal). Tente novamente ao ar livre ou marque o ponto no mapa.';
+    else if(err.code === 3) msg = 'Tempo esgotado ao buscar sua localização. Tente novamente ou marque o ponto no mapa.';
+    hint.textContent = msg;
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+});
+
+document.getElementById('route').addEventListener('click', (e) => {
+  const btn = e.target.closest('.pin-btn');
+  if(!btn) return;
+  const id = btn.dataset.target;
+  if(pickTarget === id){
+    pickTarget = null;
+    btn.classList.remove('active');
+    document.getElementById('mapStatus').classList.remove('show');
+  }else{
+    setPickTarget(id);
+  }
+});
+
+// ----- paradas dinâmicas -----
+document.getElementById('addStopBtn').addEventListener('click', () => {
+  if (waypointCount >= 3) return;
+  waypointCount++;
+  const id = 'wp_' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'stop waypoint';
+  div.dataset.wpId = id;
+  div.innerHTML = `
+    <div class="marker"><div class="dot"></div></div>
+    <label>Parada</label>
+    <div class="input-row">
+      <input type="text" placeholder="Ex: Posto de gasolina - Av. Central" data-role="waypoint-input" data-wp-target="${id}">
+      <button class="pin-btn" type="button" data-target="${id}" title="Marcar no mapa">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6" stroke="#232019" stroke-width="1.8"/></svg>
+      </button>
+    </div>
+    <button class="remove-stop" type="button">Remover parada</button>
+  `;
+  div.querySelector('.remove-stop').addEventListener('click', () => {
+    if(mapMarkers[id]){ map.removeLayer(mapMarkers[id]); delete mapMarkers[id]; }
+    delete stopCoords[id];
+    if(pickTarget === id){ pickTarget = null; document.getElementById('mapStatus').classList.remove('show'); }
+    div.remove();
+    waypointCount--;
+    updateAddStopVisibility();
+  });
+  document.getElementById('waypoints').appendChild(div);
+  updateAddStopVisibility();
+});
+
+function updateAddStopVisibility(){
+  document.getElementById('addStopBtn').style.display = waypointCount >= 3 ? 'none' : 'block';
+}
+
+function showMsg(text){
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.classList.add('show');
+}
+function hideMsg(){
+  document.getElementById('msg').classList.remove('show');
+}
+
+async function geocode(address){
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(address);
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if(!res.ok) throw new Error('Falha ao buscar o endereço.');
+  const data = await res.json();
+  if(!data || data.length === 0){
+    throw new Error('Endereço não encontrado: "' + address + '". Tente incluir cidade e estado, ou marque o ponto no mapa.');
+  }
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), label: address };
+}
+
+async function resolvePoint(id, addressText){
+  if(stopCoords[id]){
+    return { lat: stopCoords[id].lat, lon: stopCoords[id].lon, label: addressText };
+  }
+  return await geocode(addressText);
+}
+
+async function getRoute(points){
+  const coordStr = points.map(p => p.lon + ',' + p.lat).join(';');
+  const url = 'https://router.project-osrm.org/route/v1/driving/' + coordStr + '?overview=false';
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Falha ao calcular a rota.');
+  const data = await res.json();
+  if(data.code !== 'Ok' || !data.routes || data.routes.length === 0){
+    throw new Error('Não foi possível encontrar uma rota de carro entre esses endereços.');
+  }
+  return data.routes[0].legs.map(l => ({ km: l.distance / 1000, seconds: l.duration }));
+}
+
+function fmtKm(km){
+  return km.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km';
+}
+function fmtBRL(v){
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function fmtDuration(totalSeconds){
+  const totalMin = Math.max(1, Math.round(totalSeconds / 60));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if(h === 0) return m + ' min';
+  return h + 'h' + (m > 0 ? ' ' + m + 'min' : '');
+}
+
+let lastResult = null;
+
+document.getElementById('calcBtn').addEventListener('click', async () => {
+  hideMsg();
+  document.getElementById('result').classList.remove('show');
+
+  const origemVal = document.getElementById('origem').value.trim();
+  const destinoVal = document.getElementById('destino').value.trim();
+  const precoVal = PRECO_KM;
+  const idaVolta = document.getElementById('idaVolta').checked;
+  const waypointEls = Array.from(document.querySelectorAll('[data-role="waypoint-input"]'));
+  const waypointData = waypointEls
+    .map(i => ({ id: i.dataset.wpTarget, text: i.value.trim() }))
+    .filter(w => w.text.length > 0);
+
+  if(!origemVal || !destinoVal){
+    showMsg('Preencha o endereço de partida e o de destino (ou marque os pontos no mapa).');
+    return;
   }
 
-  // Passo 1: procura se o canal está ao vivo agora
-  // (usa playlistItems.list na playlist de uploads do canal — custa só 1 ponto de cota,
-  // bem diferente do search.list que custa 100 pontos e estourava rápido)
-  async function findLiveVideo() {
-    try {
-      const channelId = await resolveChannelId();
+  const btn = document.getElementById('calcBtn');
+  btn.disabled = true;
+  btn.innerHTML = 'Calculando<span class="loading-dots"></span>';
 
-      if (!uploadsPlaylistId) {
-        // truque: o ID da playlist de "todos os uploads" é o Channel ID trocando o prefixo UC por UU
-        uploadsPlaylistId = 'UU' + channelId.slice(2);
-      }
+  try{
+    const stopList = [
+      { id: 'origem', text: origemVal },
+      ...waypointData,
+      { id: 'destino', text: destinoVal }
+    ];
 
-      const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${uploadsPlaylistId}&maxResults=3&key=${currentKey()}`;
-      const playlistRes = await fetch(playlistUrl);
-
-      if (playlistRes.status === 403 || playlistRes.status === 429) {
-        if (API_KEYS.length > 1) {
-          rotateKey();
-          statusEl.textContent = `Trocando de chave (#${keyIndex + 1})...`;
-        } else {
-          statusEl.textContent = "Chave com problema (cota/permissão)";
-        }
-        return;
-      }
-
-      const playlistData = await playlistRes.json();
-      const videoIds = (playlistData.items || []).map(it => it.contentDetails.videoId).join(',');
-
-      if (!videoIds) {
-        setNotLive();
-        return;
-      }
-
-      // confirma qual desses vídeos recentes está realmente "ao vivo" agora
-      const statusUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${currentKey()}`;
-      const statusRes = await fetch(statusUrl);
-      const statusData = await statusRes.json();
-
-      const liveItem = (statusData.items || []).find(
-        it => it.snippet && it.snippet.liveBroadcastContent === 'live'
-      );
-
-      if (liveItem) {
-        if (liveItem.id !== currentLiveVideoId) {
-          currentLiveVideoId = liveItem.id;
-          lastCount = null;
-          statusEl.textContent = "Ao vivo agora";
-          startLikesPolling();
-        }
-      } else {
-        setNotLive();
-      }
-    } catch (err) {
-      statusEl.textContent = "Erro ao checar live";
-      console.error(err);
+    const geocoded = [];
+    for(const stop of stopList){
+      geocoded.push(await resolvePoint(stop.id, stop.text));
     }
-  }
 
-  function setNotLive() {
-    currentLiveVideoId = null;
-    countEl.textContent = "--";
-    statusEl.textContent = "Aguardando live...";
-    if (likesTimer) {
-      clearInterval(likesTimer);
-      likesTimer = null;
+    let legs = await getRoute(geocoded);
+
+    const addressList = stopList.map(s => s.text);
+    const legLabels = [];
+    for(let i = 0; i < addressList.length - 1; i++){
+      legLabels.push(shortLabel(addressList[i]) + ' → ' + shortLabel(addressList[i+1]));
     }
-  }
 
-  // Passo 2: enquanto estiver ao vivo, atualiza o contador de likes
-  async function fetchLikes() {
-    if (!currentLiveVideoId) return;
-
-    const statsUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${currentLiveVideoId}&key=${currentKey()}`;
-
-    try {
-      const res = await fetch(statsUrl);
-
-      // se a chave atual travou (cota estourada, chave inválida, etc), tenta a próxima
-      if (res.status === 403 || res.status === 429) {
-        if (API_KEYS.length > 1) {
-          rotateKey();
-          statusEl.textContent = `Trocando de chave (#${keyIndex + 1})...`;
-        } else {
-          statusEl.textContent = "Chave com problema (cota/permissão)";
-        }
-        return;
-      }
-
-      const data = await res.json();
-
-      if (!data.items || data.items.length === 0) return;
-
-      const likeCount = parseInt(data.items[0].statistics.likeCount, 10);
-
-      if (lastCount !== null && likeCount !== lastCount) {
-        bump();
-        if (likeCount > lastCount) {
-          explode(likeCount - lastCount);
-        }
-      }
-
-      // ao abrir o overlay com uma live já em andamento, pula a meta pra frente
-      // até achar a próxima "parada" acima do valor atual, sem disparar celebrações antigas
-      if (lastCount === null) {
-        catchUpGoal(likeCount);
-        renderGoal(likeCount);
-      } else {
-        checkGoal(likeCount);
-      }
-
-      countEl.textContent = formatNumber(likeCount);
-      lastCount = likeCount;
-      if (statusEl.textContent.startsWith('Trocando') || statusEl.textContent.startsWith('Chave')) {
-        statusEl.textContent = "Ao vivo agora";
-      }
-    } catch (err) {
-      console.error(err);
+    if(idaVolta){
+      const returnLabels = [...legLabels].reverse().map(l => {
+        const parts = l.split(' → ');
+        return parts.reverse().join(' → ') + ' (volta)';
+      });
+      legs = legs.concat([...legs].reverse());
+      for(let i=0;i<returnLabels.length;i++) legLabels.push(returnLabels[i]);
     }
-  }
 
-  function startLikesPolling() {
-    if (likesTimer) clearInterval(likesTimer);
-    fetchLikes();
-    likesTimer = setInterval(fetchLikes, UPDATE_LIKES_INTERVAL_MS);
-  }
+    const legsKm = legs.map(l => l.km);
+    const totalKm = legsKm.reduce((a,b) => a+b, 0);
+    const totalValor = totalKm * precoVal;
+    const totalSeconds = legs.reduce((a,b) => a + b.seconds, 0);
 
-  function start() {
-    if (!API_KEYS.length || API_KEYS[0] === "SUA_API_KEY_AQUI" || !CHANNEL_URL) {
-      countEl.textContent = "Config?";
-      statusEl.textContent = "Edite API_KEYS e CHANNEL_URL no arquivo";
-      return;
-    }
-    findLiveVideo();
-    setInterval(findLiveVideo, CHECK_LIVE_INTERVAL_MS);
-  }
+    const legsContainer = document.getElementById('legs');
+    legsContainer.innerHTML = '';
+    legLabels.forEach((label, i) => {
+      const row = document.createElement('div');
+      row.className = 'leg';
+      row.innerHTML = `<span class="path">${label}</span><span class="km">${fmtKm(legsKm[i])} · ${fmtBRL(legsKm[i]*precoVal)}</span>`;
+      legsContainer.appendChild(row);
+    });
 
-  start();
+    document.getElementById('valTotal').textContent = fmtBRL(totalValor);
+    document.getElementById('kmTotal').textContent = fmtKm(totalKm) + (idaVolta ? ' (ida e volta)' : '') + ' · R$ ' + precoVal.toLocaleString('pt-BR',{minimumFractionDigits:2}) + ' por km';
+    document.getElementById('timeTotal').innerHTML = 'Tempo estimado de viagem: <strong>' + fmtDuration(totalSeconds) + '</strong>';
+    document.getElementById('result').classList.add('show');
+
+    lastResult = { origemVal, destinoVal, waypointData, totalKm, totalValor, idaVolta, precoVal, legLabels, legsKm, totalSeconds };
+
+    // ajusta o mapa para mostrar toda a rota
+    const bounds = L.latLngBounds(geocoded.map(p => [p.lat, p.lon]));
+    map.fitBounds(bounds, { padding: [30,30] });
+
+  }catch(err){
+    showMsg(err.message || 'Ocorreu um erro ao calcular a viagem. Tente novamente.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Calcular valor da viagem';
+  }
+});
+
+document.getElementById('whatsBtn').addEventListener('click', () => {
+  if(!lastResult) return;
+  const r = lastResult;
+  let msg = '🚗 *Viagem Filipe VF Transporte*\n\n';
+  msg += `📍 De: ${r.origemVal}\n`;
+  r.waypointData.forEach(w => { msg += `↳ Parada: ${w.text}\n`; });
+  msg += `🏁 Para: ${r.destinoVal}\n\n`;
+  msg += `Distância: ${fmtKm(r.totalKm)}${r.idaVolta ? ' (ida e volta)' : ''}\n`;
+  msg += `Valor por km: R$ ${r.precoVal.toLocaleString('pt-BR',{minimumFractionDigits:2})}\n`;
+  msg += `*Valor total: ${fmtBRL(r.totalValor)}*`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+});
+
+function shortLabel(addr){
+  const parts = addr.split(',');
+  return parts[0].trim();
+}
+
+// ----- recibo -----
+document.getElementById('receiptBtn').addEventListener('click', () => {
+  if(!lastResult) return;
+  const r = lastResult;
+  const now = new Date();
+  const dataStr = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  const code = 'UF-' + now.getFullYear().toString().slice(-2) + (now.getMonth()+1).toString().padStart(2,'0') + now.getDate().toString().padStart(2,'0') + '-' + Math.floor(1000 + Math.random()*9000);
+
+  document.getElementById('receiptCode').textContent = code;
+  document.getElementById('receiptDate').textContent = dataStr;
+  document.getElementById('receiptKm').textContent = fmtKm(r.totalKm) + (r.idaVolta ? ' (ida e volta)' : '');
+  document.getElementById('receiptTime').textContent = fmtDuration(r.totalSeconds || 0);
+  document.getElementById('receiptPerKm').textContent = 'R$ ' + r.precoVal.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  document.getElementById('receiptTotal').textContent = fmtBRL(r.totalValor);
+
+  const routeEl = document.getElementById('receiptRoute');
+  routeEl.innerHTML = '';
+  const addOrigin = (text) => {
+    const div = document.createElement('div');
+    div.className = 'r-stop o';
+    div.innerHTML = `<span class="r-dot"></span><span>${text}</span>`;
+    routeEl.appendChild(div);
+  };
+  const addMid = (text) => {
+    const div = document.createElement('div');
+    div.className = 'r-stop';
+    div.innerHTML = `<span class="r-dot"></span><span>${text}</span>`;
+    routeEl.appendChild(div);
+  };
+  const addDest = (text) => {
+    const div = document.createElement('div');
+    div.className = 'r-stop d';
+    div.innerHTML = `<span class="r-dot"></span><span>${text}</span>`;
+    routeEl.appendChild(div);
+  };
+  addOrigin(r.origemVal);
+  r.waypointData.forEach(w => addMid(w.text));
+  addDest(r.destinoVal);
+  if(r.idaVolta) addMid('Retorno até ' + shortLabel(r.origemVal) + ' (ida e volta)');
+
+  document.getElementById('receiptOverlay').classList.add('show');
+});
+
+document.getElementById('receiptCloseBtn').addEventListener('click', () => {
+  document.getElementById('receiptOverlay').classList.remove('show');
+});
+document.getElementById('receiptOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'receiptOverlay') document.getElementById('receiptOverlay').classList.remove('show');
+});
+document.getElementById('receiptPrintBtn').addEventListener('click', () => {
+  window.print();
+});
 </script>
-
 </body>
 </html>
