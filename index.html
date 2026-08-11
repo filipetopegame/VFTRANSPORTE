@@ -388,6 +388,31 @@
   .map-pin-dest{ width:16px;height:16px;border-radius:50% 50% 50% 0;background:var(--ink);border:3px solid var(--yellow); transform:rotate(-45deg); box-shadow:0 1px 4px rgba(0,0,0,.4); }
   .map-pin-wp{ width:12px;height:12px;border-radius:50%;background:var(--yellow);border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); }
   .map-pin-user{ width:16px;height:16px;border-radius:50%;background:#2b7de9;border:3px solid #fff; box-shadow:0 0 0 5px rgba(43,125,233,0.28); }
+  .map-pin-driver{ width:18px;height:18px;border-radius:50% 50% 50% 4px;background:#2b7de9;border:3px solid #fff; box-shadow:0 0 0 5px rgba(43,125,233,0.28); transform:rotate(-45deg); }
+
+  /* --- mapa ao vivo (rastreio) --- */
+  .wait-map-wrap{ margin-bottom:16px; display:none; }
+  .wait-map-wrap.show{ display:block; }
+  #waitMap{ width:100%; height:190px; border-radius:12px; border:1.5px solid var(--line); }
+  .driver-map-wrap{ margin-top:12px; }
+  .mini-map{ width:100%; height:170px; border-radius:12px; border:1.5px solid var(--line); }
+
+  .payment-status{
+    margin-top:10px; padding:10px 12px; border-radius:9px;
+    font-size:12.5px; font-weight:700;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+    display:flex; align-items:center; gap:7px;
+  }
+  .payment-status.paid{ background:var(--green-soft); color:var(--green); }
+  .payment-status.unpaid{ background:#fdf1d6; color:#8a6d1f; }
+  .stage-btn.stage-cash{
+    width:100%; margin-top:8px; padding:12px; border-radius:9px;
+    background:transparent; border:1.5px solid var(--ink-soft) !important; color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:11.5px;
+    letter-spacing:.04em; text-transform:uppercase; cursor:pointer;
+  }
+  .stage-btn.stage-cash:hover{ border-color:var(--ink) !important; color:var(--ink); }
+  .stage-btn.stage-finish:disabled{ opacity:.5; cursor:not-allowed; }
 
   /* --- botão de localização --- */
   .locate-btn{
@@ -1026,7 +1051,19 @@
     <div class="wait-spinner" id="waitSpinner"></div>
     <div class="wait-title" id="waitTitle">Procurando motorista...</div>
     <div class="wait-sub" id="waitSub">Seu pedido foi enviado. Assim que o motorista aceitar, você verá a confirmação aqui.</div>
+    <div class="wait-map-wrap" id="waitMapWrap"><div id="waitMap"></div></div>
     <div class="wait-status-tag" id="waitTag"><span class="pulse"></span> Aguardando resposta</div>
+    <div class="pix-box" id="waitPaymentBox" style="display:none; text-align:left;">
+      <div class="pix-title">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M7 3l4.3 4.3a2.5 2.5 0 0 0 3.4 0L19 3M7 21l4.3-4.3a2.5 2.5 0 0 1 3.4 0L19 21M3 7l4.3 4.3a2.5 2.5 0 0 1 0 3.4L3 19M21 7l-4.3 4.3a2.5 2.5 0 0 0 0 3.4L21 19" stroke="#1a7a4c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Pagamento da corrida
+      </div>
+      <div class="pix-row">
+        <span class="pix-key" id="waitPixKey">21992976849</span>
+        <button type="button" id="waitPixCopyBtn">Copiar</button>
+      </div>
+      <div class="pix-note" id="waitPayNote">Finalize o pagamento antes de chegar ao destino.</div>
+    </div>
     <div class="wait-actions">
       <button type="button" id="waitCancelBtn">Cancelar pedido</button>
       <button type="button" class="wait-whats" id="waitWhatsBtn" style="display:none;">Chamar no WhatsApp</button>
@@ -1106,7 +1143,7 @@ const FIREBASE_CONFIG_PLACEHOLDER = {
   appId: "1:625643347321:web:29a32f17ade9dfc555a3a8"
 };
 
-const DRIVER_PASSWORD = '1234'; // troque por uma senha sua
+const DRIVER_PASSWORD = '97035855'; // troque por uma senha sua
 
 let fbReady = false;
 let db = null;
@@ -1342,6 +1379,17 @@ async function getRoute(points){
     throw new Error('Não foi possível encontrar uma rota de carro entre esses endereços.');
   }
   return data.routes[0].legs.map(l => ({ km: l.distance / 1000, seconds: l.duration }));
+}
+
+async function fetchRouteGeometry(lat1, lon1, lat2, lon2){
+  try{
+    const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(data.code !== 'Ok' || !data.routes || !data.routes.length) return null;
+    return data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+  }catch(e){ return null; }
 }
 
 function fmtKm(km){
@@ -1642,6 +1690,7 @@ document.getElementById('requestBtn').addEventListener('click', () => {
     passageiroNome: nome || '',
     passageiroTel: tel || '',
     status: 'pendente',
+    pagamento: 'pendente',
     criadoEm: Date.now()
   };
 
@@ -1662,7 +1711,124 @@ document.getElementById('requestBtn').addEventListener('click', () => {
   });
 });
 
+// ----- mapa ao vivo do passageiro (acompanhar o motorista) -----
+let waitMap = null;
+let waitDriverMarker = null;
+let waitTargetMarker = null;
+let waitRouteLine = null;
+let waitRouteKey = null;
+
+function resetWaitMap(){
+  if(waitMap){
+    try{ waitMap.remove(); }catch(e){}
+  }
+  waitMap = null;
+  waitDriverMarker = null;
+  waitTargetMarker = null;
+  waitRouteLine = null;
+  waitRouteKey = null;
+  document.getElementById('waitMapWrap').classList.remove('show');
+}
+
+function ensureWaitMap(){
+  if(waitMap) return waitMap;
+  waitMap = L.map('waitMap', { zoomControl:false, attributionControl:false }).setView([-22.9068, -43.1729], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(waitMap);
+  return waitMap;
+}
+
+async function updateWaitMap(data){
+  const wrap = document.getElementById('waitMapWrap');
+  const hasDriverPos = typeof data.motoristaLat === 'number' && typeof data.motoristaLon === 'number';
+  const activeStatus = data.status === 'aceita' || data.status === 'em_viagem';
+  if(!hasDriverPos || !activeStatus){
+    wrap.classList.remove('show');
+    return;
+  }
+  wrap.classList.add('show');
+  const map = ensureWaitMap();
+  setTimeout(() => map.invalidateSize(), 60);
+
+  const driverPt = [data.motoristaLat, data.motoristaLon];
+  if(!waitDriverMarker){
+    waitDriverMarker = L.marker(driverPt, { icon: L.divIcon({ className:'leaflet-div-icon', html:'<div class="map-pin-driver"></div>', iconSize:[18,18], iconAnchor:[9,9] }) }).addTo(map);
+  }else{
+    waitDriverMarker.setLatLng(driverPt);
+  }
+
+  let targetPt = null;
+  let targetKind = 'destino';
+  if(data.status === 'em_viagem' && typeof data.destinoLat === 'number'){
+    targetPt = [data.destinoLat, data.destinoLon];
+    targetKind = 'destino';
+  }else if(typeof data.origemLat === 'number'){
+    targetPt = [data.origemLat, data.origemLon];
+    targetKind = 'origem';
+  }
+
+  if(targetPt){
+    if(!waitTargetMarker){
+      waitTargetMarker = L.marker(targetPt, { icon: iconFor(targetKind) }).addTo(map);
+    }else{
+      waitTargetMarker.setLatLng(targetPt);
+    }
+    if(waitRouteKey !== data.status){
+      waitRouteKey = data.status;
+      if(waitRouteLine){ map.removeLayer(waitRouteLine); waitRouteLine = null; }
+      const coords = await fetchRouteGeometry(driverPt[0], driverPt[1], targetPt[0], targetPt[1]);
+      if(coords && waitMap){
+        waitRouteLine = L.polyline(coords, { color:'#2b7de9', weight:4, opacity:.75 }).addTo(map);
+      }
+    }
+    map.fitBounds(L.latLngBounds([driverPt, targetPt]), { padding:[36,36] });
+  }else{
+    map.setView(driverPt, 15);
+  }
+}
+
+// ----- pagamento: caixa dentro da tela de espera (apenas informativa; quem confirma é o motorista) -----
+function updateWaitPayment(data){
+  const box = document.getElementById('waitPaymentBox');
+  const note = document.getElementById('waitPayNote');
+  if(data.status === 'em_viagem' && data.pagamento !== 'confirmado'){
+    box.style.display = 'block';
+    note.textContent = 'Finalize o pagamento antes de chegar ao destino. Envie o Pix pra chave acima; o motorista confirma o recebimento do lado dele.';
+  }else if(data.pagamento === 'confirmado'){
+    box.style.display = 'block';
+    note.textContent = '✓ Pagamento confirmado pelo motorista. Aguarde a finalização da corrida.';
+  }else{
+    box.style.display = 'none';
+  }
+}
+
+document.getElementById('waitPixCopyBtn').addEventListener('click', () => {
+  const btn = document.getElementById('waitPixCopyBtn');
+  const doFallback = () => {
+    const tmp = document.createElement('textarea');
+    tmp.value = PIX_KEY;
+    tmp.style.position = 'fixed';
+    tmp.style.opacity = '0';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(tmp);
+  };
+  const markCopied = () => {
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 1800);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(PIX_KEY).then(markCopied).catch(() => { doFallback(); markCopied(); });
+  }else{
+    doFallback();
+    markCopied();
+  }
+});
+
 function openWaitOverlay(rideData){
+  resetWaitMap();
+  document.getElementById('waitPaymentBox').style.display = 'none';
   waitCard.className = 'wait-card';
   waitTitle.textContent = 'Procurando motorista...';
   waitSub.textContent = 'Seu pedido foi enviado. Assim que o motorista aceitar, você verá a confirmação aqui.';
@@ -1678,6 +1844,8 @@ function listenToRideStatus(ref){
   ref.on('value', (snap) => {
     const data = snap.val();
     if(!data) return;
+    updateWaitMap(data);
+    updateWaitPayment(data);
     if(data.status === 'aceita'){
       waitCard.className = 'wait-card accepted';
       waitTitle.textContent = 'Corrida aceita! 🚗';
@@ -1734,6 +1902,77 @@ let soundOn = true;
 let knownRideIds = new Set();
 let firstLoadDone = false;
 
+// ----- rastreio ao vivo: motorista compartilha a própria posição -----
+let driverWatchId = null;
+let driverActiveRideId = null;
+let lastKnownDriverPos = null;
+let driverRideMaps = {}; // { rideId: { map, driverMarker, targetMarker, routeLine } }
+
+function startDriverLocationSharing(rideId){
+  if(!navigator.geolocation || !fbReady) return;
+  if(driverWatchId !== null && driverActiveRideId === rideId) return;
+  stopDriverLocationSharing();
+  driverActiveRideId = rideId;
+  driverWatchId = navigator.geolocation.watchPosition((pos) => {
+    const { latitude, longitude } = pos.coords;
+    lastKnownDriverPos = { lat: latitude, lon: longitude };
+    db.ref('corridas/' + rideId).update({
+      motoristaLat: latitude,
+      motoristaLon: longitude,
+      motoristaAtualizadoEm: Date.now()
+    });
+    const mapEntry = driverRideMaps[rideId];
+    if(mapEntry){
+      mapEntry.driverMarker.setLatLng([latitude, longitude]);
+      mapEntry.map.panTo([latitude, longitude]);
+    }
+  }, (err) => {
+    console.warn('Não foi possível compartilhar a localização do motorista:', err);
+  }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+}
+
+function stopDriverLocationSharing(){
+  if(driverWatchId !== null){
+    navigator.geolocation.clearWatch(driverWatchId);
+    driverWatchId = null;
+  }
+  driverActiveRideId = null;
+}
+
+function clearDriverRideMaps(){
+  Object.values(driverRideMaps).forEach(entry => {
+    try{ entry.map.remove(); }catch(e){}
+  });
+  driverRideMaps = {};
+}
+
+function initDriverMiniMap(id, targetLat, targetLon, targetKind){
+  const container = document.getElementById('driverMap-' + id);
+  if(!container) return;
+  const startLat = lastKnownDriverPos ? lastKnownDriverPos.lat : (typeof targetLat === 'number' ? targetLat : -22.9068);
+  const startLon = lastKnownDriverPos ? lastKnownDriverPos.lon : (typeof targetLon === 'number' ? targetLon : -43.1729);
+
+  const map = L.map(container, { zoomControl:false, attributionControl:false }).setView([startLat, startLon], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(map);
+  const driverMarker = L.marker([startLat, startLon], {
+    icon: L.divIcon({ className:'leaflet-div-icon', html:'<div class="map-pin-driver"></div>', iconSize:[18,18], iconAnchor:[9,9] })
+  }).addTo(map);
+
+  driverRideMaps[id] = { map, driverMarker, targetMarker:null, routeLine:null };
+
+  if(typeof targetLat === 'number' && typeof targetLon === 'number'){
+    const targetMarker = L.marker([targetLat, targetLon], { icon: iconFor(targetKind) }).addTo(map);
+    driverRideMaps[id].targetMarker = targetMarker;
+    map.fitBounds(L.latLngBounds([[startLat, startLon],[targetLat, targetLon]]), { padding:[30,30] });
+    fetchRouteGeometry(startLat, startLon, targetLat, targetLon).then(coords => {
+      if(coords && driverRideMaps[id]){
+        driverRideMaps[id].routeLine = L.polyline(coords, { color:'#2b7de9', weight:4, opacity:.75 }).addTo(map);
+      }
+    });
+  }
+  setTimeout(() => map.invalidateSize(), 60);
+}
+
 document.getElementById('driverGateBtn').addEventListener('click', unlockDriver);
 document.getElementById('driverPass').addEventListener('keydown', (e) => {
   if(e.key === 'Enter') unlockDriver();
@@ -1781,12 +2020,21 @@ function playAlertSound(){
 }
 
 let rideListenerStarted = false;
+let lastRidesSignature = '';
 function startRideListener(){
   if(rideListenerStarted || !fbReady) return;
   rideListenerStarted = true;
   db.ref('corridas').orderByChild('criadoEm').on('value', (snap) => {
     const data = snap.val() || {};
-    renderRides(data);
+    // assinatura que ignora campos de posição/tempo em tempo real (evita
+    // recriar a lista inteira e o mapa a cada atualização de GPS)
+    const sig = Object.entries(data)
+      .map(([id, r]) => id + ':' + r.status + ':' + (r.pagamento || ''))
+      .sort().join('|');
+    if(sig !== lastRidesSignature){
+      lastRidesSignature = sig;
+      renderRides(data);
+    }
   });
 }
 
@@ -1825,6 +2073,20 @@ function renderRides(data){
   pendentes.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, 'pendente')));
   emAndamento.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, r.status)));
   historico.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, 'historico')));
+
+  // rastreio ao vivo: compartilha a localização do motorista e desenha o mini-mapa da corrida ativa
+  clearDriverRideMaps();
+  if(emAndamento.length > 0){
+    const [activeId, activeRide] = emAndamento[0];
+    startDriverLocationSharing(activeId);
+    if(activeRide.status === 'em_viagem'){
+      initDriverMiniMap(activeId, activeRide.destinoLat, activeRide.destinoLon, 'destino');
+    }else{
+      initDriverMiniMap(activeId, activeRide.origemLat, activeRide.origemLon, 'origem');
+    }
+  }else{
+    stopDriverLocationSharing();
+  }
 }
 
 function buildRideCard(id, r, stage){
@@ -1884,14 +2146,22 @@ function buildRideCard(id, r, stage){
   }else if(stage === 'aceita'){
     bottomHtml = `
       <span class="ride-status accepted">✓ Aceita · indo buscar</span>
+      <div class="driver-map-wrap"><div id="driverMap-${id}" class="mini-map"></div></div>
       ${navBlock('Buscar o passageiro', wazeUrlOrigem, mapsUrlOrigem)}
       <button class="stage-btn stage-start" data-action="em_viagem">Passageiro embarcou · Iniciar viagem</button>
     `;
   }else if(stage === 'em_viagem'){
+    const pago = r.pagamento === 'confirmado';
     bottomHtml = `
       <span class="ride-status accepted">🚗 Em viagem</span>
+      <div class="driver-map-wrap"><div id="driverMap-${id}" class="mini-map"></div></div>
       ${navBlock('Ir para o destino', wazeUrlDestino, mapsUrlDestino)}
-      <button class="stage-btn stage-finish" data-action="concluida">Chegou no destino · Finalizar corrida</button>
+      <div class="payment-status ${pago ? 'paid' : 'unpaid'}">${pago ? '✓ Pagamento confirmado pelo passageiro' : '⏳ Aguardando pagamento do passageiro (Pix)'}</div>
+      ${pago
+        ? `<button class="stage-btn stage-finish" data-action="concluida">Chegou no destino · Finalizar corrida</button>`
+        : `<button class="stage-btn stage-finish" disabled>Aguardando confirmação de pagamento</button>
+           <button class="stage-btn stage-cash" data-action="confirm-payment">Cliente pagou · Confirmar pagamento</button>`
+      }
     `;
   }else{
     bottomHtml = `<div>${statusHtml}</div>`;
@@ -1917,7 +2187,12 @@ function buildRideCard(id, r, stage){
 
   card.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', () => {
-      db.ref('corridas/' + id).update({ status: btn.dataset.action });
+      const action = btn.dataset.action;
+      if(action === 'confirm-payment'){
+        db.ref('corridas/' + id).update({ pagamento: 'confirmado', pagamentoEm: Date.now(), confirmadoPor: 'motorista' });
+      }else{
+        db.ref('corridas/' + id).update({ status: action });
+      }
     });
   });
   if(stage === 'pendente'){
