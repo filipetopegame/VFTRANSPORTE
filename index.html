@@ -411,6 +411,78 @@
   }
   .time-total strong{ color:var(--ink); font-family:'IBM Plex Mono',monospace; }
 
+  .schedule-box{
+    margin-top:14px; margin-bottom:4px;
+    padding:14px;
+    border:1.5px dashed var(--line);
+    border-radius:12px;
+  }
+  .schedule-box .sch-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft); font-weight:700; margin-bottom:10px;
+  }
+  .schedule-row{ display:flex; gap:10px; }
+  .schedule-row .field{ flex:1; }
+  .schedule-row label{
+    display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;
+  }
+  .schedule-row input{
+    width:100%;
+    padding:10px 11px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    color:var(--ink);
+    background:#fff;
+  }
+  .schedule-row input:focus{ outline:none; border-color:var(--ink); }
+
+  .pix-box{
+    margin-top:12px;
+    background:#fff;
+    border:1.5px solid var(--green);
+    border-radius:12px;
+    padding:14px 16px;
+  }
+  .pix-box .pix-title{
+    display:flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--green); font-weight:700; margin-bottom:9px;
+  }
+  .pix-box .pix-title svg{ width:15px; height:15px; }
+  .pix-row{
+    display:flex; align-items:center; gap:8px;
+    background:var(--green-soft);
+    border-radius:9px;
+    padding:9px 10px;
+  }
+  .pix-row .pix-key{
+    flex:1;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px; font-weight:700; color:var(--ink);
+    letter-spacing:.02em;
+    word-break:break-all;
+  }
+  .pix-row button{
+    flex:none;
+    padding:8px 12px;
+    border-radius:7px;
+    border:none;
+    background:var(--ink);
+    color:var(--yellow);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    cursor:pointer;
+    transition:transform .1s, background .15s;
+  }
+  .pix-row button:hover{ background:#33302a; }
+  .pix-row button:active{ transform:scale(0.96); }
+  .pix-row button.copied{ background:var(--green); color:#fff; }
+  .pix-box .pix-note{ margin-top:8px; font-size:11.5px; color:var(--ink-soft); }
+
   .receipt-btn{
     width:100%;
     margin-top:10px;
@@ -604,6 +676,20 @@
       </label>
     </div>
 
+    <div class="schedule-box">
+      <div class="sch-title">Agendar corrida (opcional)</div>
+      <div class="schedule-row">
+        <div class="field">
+          <label for="agendaData">Data</label>
+          <input type="date" id="agendaData">
+        </div>
+        <div class="field">
+          <label for="agendaHora">Horário</label>
+          <input type="time" id="agendaHora">
+        </div>
+      </div>
+    </div>
+
     <button class="calc-btn" id="calcBtn" type="button">Calcular valor da viagem</button>
     <div class="msg" id="msg"></div>
 
@@ -614,6 +700,17 @@
         <div class="val" id="valTotal">R$ 0,00</div>
         <div class="km-total" id="kmTotal"></div>
         <div class="time-total" id="timeTotal"></div>
+      </div>
+      <div class="pix-box">
+        <div class="pix-title">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 3l4.3 4.3a2.5 2.5 0 0 0 3.4 0L19 3M7 21l4.3-4.3a2.5 2.5 0 0 1 3.4 0L19 21M3 7l4.3 4.3a2.5 2.5 0 0 1 0 3.4L3 19M21 7l-4.3 4.3a2.5 2.5 0 0 0 0 3.4L21 19" stroke="#1a7a4c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Pagar / confirmar com Pix
+        </div>
+        <div class="pix-row">
+          <span class="pix-key" id="pixKey">21992976849</span>
+          <button type="button" id="pixCopyBtn">Copiar</button>
+        </div>
+        <div class="pix-note">Chave Pix (telefone) de Filipe VF Transporte. Envie o comprovante pelo WhatsApp para confirmar o agendamento.</div>
       </div>
       <button class="whats-btn" id="whatsBtn" type="button">
         <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.29-.15-1.7-.84-1.97-.93-.26-.1-.46-.15-.65.14-.2.3-.75.93-.92 1.12-.17.2-.34.22-.63.08-.29-.15-1.22-.45-2.33-1.44-.86-.77-1.44-1.72-1.6-2.02-.17-.3-.02-.46.13-.6.13-.13.29-.34.44-.51.15-.17.2-.3.29-.5.1-.2.05-.37-.02-.51-.08-.15-.65-1.58-.9-2.16-.24-.58-.48-.5-.65-.5-.17-.01-.37-.01-.56-.01-.2 0-.51.07-.78.37-.26.3-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.15.2 2.06 3.16 5 4.43.7.3 1.24.48 1.67.62.7.22 1.34.19 1.84.11.56-.08 1.7-.7 1.95-1.36.24-.67.24-1.24.17-1.36-.07-.12-.26-.2-.55-.34z"/><path d="M12.02 2C6.5 2 2.02 6.48 2.02 12c0 1.85.5 3.58 1.36 5.07L2 22l5.08-1.33A9.96 9.96 0 0 0 12.02 22C17.55 22 22 17.52 22 12S17.55 2 12.02 2zm0 18.2c-1.62 0-3.13-.46-4.4-1.26l-.32-.19-3.02.79.8-2.94-.2-.32A8.18 8.18 0 0 1 3.82 12c0-4.53 3.68-8.2 8.2-8.2 4.52 0 8.2 3.67 8.2 8.2 0 4.52-3.68 8.2-8.2 8.2z"/></svg>
@@ -638,10 +735,12 @@
     <div class="receipt-route" id="receiptRoute"></div>
     <div class="receipt-body">
       <div class="receipt-row"><span class="r-lbl">Data</span><span class="r-val" id="receiptDate"></span></div>
+      <div class="receipt-row" id="receiptAgendaRow" style="display:none;"><span class="r-lbl">Agendado para</span><span class="r-val" id="receiptAgenda"></span></div>
       <div class="receipt-row"><span class="r-lbl">Distância</span><span class="r-val" id="receiptKm"></span></div>
       <div class="receipt-row"><span class="r-lbl">Tempo estimado</span><span class="r-val" id="receiptTime"></span></div>
       <div class="receipt-row"><span class="r-lbl">Valor por km</span><span class="r-val" id="receiptPerKm"></span></div>
       <div class="receipt-row"><span class="r-lbl">Motorista</span><span class="r-val">Filipe</span></div>
+      <div class="receipt-row"><span class="r-lbl">Pix</span><span class="r-val" id="receiptPix"></span></div>
     </div>
     <div class="receipt-total">
       <div class="lbl">Valor total</div>
@@ -965,7 +1064,7 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
     document.getElementById('timeTotal').innerHTML = 'Tempo estimado de viagem: <strong>' + fmtDuration(totalSeconds) + '</strong>';
     document.getElementById('result').classList.add('show');
 
-    lastResult = { origemVal, destinoVal, waypointData, totalKm, totalValor, idaVolta, precoVal, legLabels, legsKm, totalSeconds };
+    lastResult = { origemVal, destinoVal, waypointData, totalKm, totalValor, idaVolta, precoVal, legLabels, legsKm, totalSeconds, agendaData: document.getElementById('agendaData').value, agendaHora: document.getElementById('agendaHora').value };
 
     // ajusta o mapa para mostrar toda a rota
     const bounds = L.latLngBounds(geocoded.map(p => [p.lat, p.lon]));
@@ -979,6 +1078,16 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
   }
 });
 
+const PIX_KEY = '21992976849';
+
+function fmtAgendaDate(dateStr, timeStr){
+  if(!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  let out = d + '/' + m + '/' + y;
+  if(timeStr) out += ' às ' + timeStr;
+  return out;
+}
+
 document.getElementById('whatsBtn').addEventListener('click', () => {
   if(!lastResult) return;
   const r = lastResult;
@@ -986,9 +1095,13 @@ document.getElementById('whatsBtn').addEventListener('click', () => {
   msg += `📍 De: ${r.origemVal}\n`;
   r.waypointData.forEach(w => { msg += `↳ Parada: ${w.text}\n`; });
   msg += `🏁 Para: ${r.destinoVal}\n\n`;
+  const agenda = fmtAgendaDate(r.agendaData, r.agendaHora);
+  if(agenda) msg += `📅 Agendado para: ${agenda}\n`;
   msg += `Distância: ${fmtKm(r.totalKm)}${r.idaVolta ? ' (ida e volta)' : ''}\n`;
+  msg += `Tempo estimado: ${fmtDuration(r.totalSeconds || 0)}\n`;
   msg += `Valor por km: R$ ${r.precoVal.toLocaleString('pt-BR',{minimumFractionDigits:2})}\n`;
-  msg += `*Valor total: ${fmtBRL(r.totalValor)}*`;
+  msg += `*Valor total: ${fmtBRL(r.totalValor)}*\n\n`;
+  msg += `💠 Pix (celular): ${PIX_KEY}`;
 
   const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
@@ -998,6 +1111,32 @@ function shortLabel(addr){
   const parts = addr.split(',');
   return parts[0].trim();
 }
+
+// ----- pix: copiar chave -----
+document.getElementById('pixCopyBtn').addEventListener('click', () => {
+  const btn = document.getElementById('pixCopyBtn');
+  const doFallback = () => {
+    const tmp = document.createElement('textarea');
+    tmp.value = PIX_KEY;
+    tmp.style.position = 'fixed';
+    tmp.style.opacity = '0';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(tmp);
+  };
+  const markCopied = () => {
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 1800);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(PIX_KEY).then(markCopied).catch(() => { doFallback(); markCopied(); });
+  }else{
+    doFallback();
+    markCopied();
+  }
+});
 
 // ----- recibo -----
 document.getElementById('receiptBtn').addEventListener('click', () => {
@@ -1009,9 +1148,20 @@ document.getElementById('receiptBtn').addEventListener('click', () => {
 
   document.getElementById('receiptCode').textContent = code;
   document.getElementById('receiptDate').textContent = dataStr;
+
+  const agenda = fmtAgendaDate(r.agendaData, r.agendaHora);
+  const agendaRow = document.getElementById('receiptAgendaRow');
+  if(agenda){
+    agendaRow.style.display = 'flex';
+    document.getElementById('receiptAgenda').textContent = agenda;
+  }else{
+    agendaRow.style.display = 'none';
+  }
+
   document.getElementById('receiptKm').textContent = fmtKm(r.totalKm) + (r.idaVolta ? ' (ida e volta)' : '');
   document.getElementById('receiptTime').textContent = fmtDuration(r.totalSeconds || 0);
   document.getElementById('receiptPerKm').textContent = 'R$ ' + r.precoVal.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  document.getElementById('receiptPix').textContent = PIX_KEY;
   document.getElementById('receiptTotal').textContent = fmtBRL(r.totalValor);
 
   const routeEl = document.getElementById('receiptRoute');
