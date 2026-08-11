@@ -806,7 +806,13 @@
   }
   .ride-card .ride-status.accepted{ background:var(--green-soft); color:var(--green); }
   .ride-card .ride-status.rejected{ background:#fbe9e4; color:var(--danger); }
-  .nav-buttons{ display:flex; gap:10px; margin-top:12px; }
+  .nav-buttons{ display:flex; gap:10px; margin-top:8px; }
+  .nav-stage-lbl{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft);
+    margin-top:14px; margin-bottom:2px;
+  }
+  .nav-stage-lbl:first-of-type{ margin-top:14px; }
   .nav-buttons button{
     flex:1; padding:12px; border-radius:9px; border:none;
     font-family:'Inter',sans-serif; font-size:13px; font-weight:700;
@@ -817,6 +823,15 @@
   .nav-buttons .waze-btn{ background:#33CCFF; color:#1a1a2e; }
   .nav-buttons .maps-btn{ background:#4285F4; color:#fff; }
   .nav-buttons svg{ width:17px; height:17px; }
+  .stage-btn{
+    width:100%; margin-top:14px; padding:13px; border:none; border-radius:10px;
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:12.5px;
+    letter-spacing:.04em; text-transform:uppercase; cursor:pointer;
+    transition:transform .1s;
+  }
+  .stage-btn:active{ transform:scale(0.98); }
+  .stage-btn.stage-start{ background:var(--yellow); color:var(--ink); }
+  .stage-btn.stage-finish{ background:var(--green); color:#fff; }
 
   .fb-warning{
     background:#fbe9e4; color:var(--danger); border-radius:10px;
@@ -1664,10 +1679,24 @@ function listenToRideStatus(ref){
     const data = snap.val();
     if(!data) return;
     if(data.status === 'aceita'){
-      waitCard.className = 'wait-card accepted done';
+      waitCard.className = 'wait-card accepted';
       waitTitle.textContent = 'Corrida aceita! 🚗';
-      waitSub.textContent = 'Filipe VF Transporte confirmou sua corrida e está a caminho. Combine os detalhes finais pelo WhatsApp.';
-      waitTag.innerHTML = '✓ Motorista a caminho';
+      waitSub.textContent = 'Filipe VF Transporte confirmou sua corrida e está a caminho de te buscar. Combine os detalhes finais pelo WhatsApp.';
+      waitTag.innerHTML = '✓ Motorista a caminho pra te buscar';
+      waitCancelBtn.style.display = 'none';
+      waitWhatsBtn.style.display = 'block';
+    }else if(data.status === 'em_viagem'){
+      waitCard.className = 'wait-card accepted';
+      waitTitle.textContent = 'Corrida em andamento 🚗💨';
+      waitSub.textContent = 'Você já está a caminho do destino. Boa viagem!';
+      waitTag.innerHTML = '✓ A caminho do destino';
+      waitCancelBtn.style.display = 'none';
+      waitWhatsBtn.style.display = 'block';
+    }else if(data.status === 'concluida'){
+      waitCard.className = 'wait-card accepted done';
+      waitTitle.textContent = 'Corrida finalizada ✅';
+      waitSub.textContent = 'Você chegou ao seu destino. Obrigado por viajar com Filipe VF Transporte!';
+      waitTag.innerHTML = '✓ Concluída';
       waitCancelBtn.style.display = 'none';
       waitWhatsBtn.style.display = 'block';
       ref.off('value');
@@ -1770,7 +1799,8 @@ function fmtWhen(ts){
 function renderRides(data){
   const entries = Object.entries(data).sort((a,b) => (b[1].criadoEm||0) - (a[1].criadoEm||0));
   const pendentes = entries.filter(([id, r]) => r.status === 'pendente');
-  const outras = entries.filter(([id, r]) => r.status !== 'pendente').slice(0, 5);
+  const emAndamento = entries.filter(([id, r]) => r.status === 'aceita' || r.status === 'em_viagem');
+  const historico = entries.filter(([id, r]) => r.status === 'recusada' || r.status === 'cancelada' || r.status === 'concluida').slice(0, 5);
 
   document.getElementById('motoristaBadge').textContent = pendentes.length;
   document.getElementById('motoristaBadge').classList.toggle('show', pendentes.length > 0);
@@ -1787,18 +1817,19 @@ function renderRides(data){
   const list = document.getElementById('rideList');
   list.innerHTML = '';
 
-  if(pendentes.length === 0 && outras.length === 0){
+  if(pendentes.length === 0 && emAndamento.length === 0 && historico.length === 0){
     list.innerHTML = '<div class="ride-empty">Nenhum pedido de corrida ainda. Assim que um passageiro solicitar, vai aparecer aqui na hora.</div>';
     return;
   }
 
-  pendentes.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, true)));
-  outras.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, false)));
+  pendentes.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, 'pendente')));
+  emAndamento.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, r.status)));
+  historico.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, 'historico')));
 }
 
-function buildRideCard(id, r, isPending){
+function buildRideCard(id, r, stage){
   const card = document.createElement('div');
-  card.className = 'ride-card' + (isPending ? ' flash' : '');
+  card.className = 'ride-card' + (stage === 'pendente' ? ' flash' : '');
   card.dataset.rideId = id;
 
   const paradasHtml = (r.paradas || []).map(p => `<div class="ride-stop"><span class="r-dot"></span><span>${p}</span></div>`).join('');
@@ -1808,29 +1839,63 @@ function buildRideCard(id, r, isPending){
     : '👤 Passageiro não informou nome/telefone';
 
   let statusHtml = '';
-  if(r.status === 'aceita') statusHtml = '<span class="ride-status accepted">✓ Aceita</span>';
+  if(r.status === 'concluida') statusHtml = '<span class="ride-status accepted">✓ Concluída</span>';
   else if(r.status === 'recusada') statusHtml = '<span class="ride-status rejected">Recusada</span>';
   else if(r.status === 'cancelada') statusHtml = '<span class="ride-status rejected">Cancelada pelo passageiro</span>';
 
-  const hasCoords = typeof r.origemLat === 'number' && typeof r.origemLon === 'number';
-  const wazeUrl = hasCoords
+  const hasOrigemCoords = typeof r.origemLat === 'number' && typeof r.origemLon === 'number';
+  const wazeUrlOrigem = hasOrigemCoords
     ? `https://waze.com/ul?ll=${r.origemLat},${r.origemLon}&navigate=yes`
     : `https://waze.com/ul?q=${encodeURIComponent(r.origem || '')}&navigate=yes`;
-  const mapsUrl = hasCoords
+  const mapsUrlOrigem = hasOrigemCoords
     ? `https://www.google.com/maps/dir/?api=1&destination=${r.origemLat},${r.origemLon}&travelmode=driving`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(r.origem || '')}&travelmode=driving`;
-  const navButtonsHtml = `
+
+  const hasDestinoCoords = typeof r.destinoLat === 'number' && typeof r.destinoLon === 'number';
+  const wazeUrlDestino = hasDestinoCoords
+    ? `https://waze.com/ul?ll=${r.destinoLat},${r.destinoLon}&navigate=yes`
+    : `https://waze.com/ul?q=${encodeURIComponent(r.destino || '')}&navigate=yes`;
+  const mapsUrlDestino = hasDestinoCoords
+    ? `https://www.google.com/maps/dir/?api=1&destination=${r.destinoLat},${r.destinoLon}&travelmode=driving`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(r.destino || '')}&travelmode=driving`;
+
+  const navBlock = (label, wazeUrl, mapsUrl) => `
+    <div class="nav-stage-lbl">${label}</div>
     <div class="nav-buttons">
       <button class="waze-btn" type="button" onclick="window.open('${wazeUrl}', '_blank')">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><path d="M8.5 14.5c1 1 5 1 6 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        Abrir no Waze
+        Waze
       </button>
       <button class="maps-btn" type="button" onclick="window.open('${mapsUrl}', '_blank')">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13z" fill="currentColor"/><circle cx="12" cy="9" r="2.4" fill="#fff"/></svg>
-        Abrir no Maps
+        Maps
       </button>
     </div>
   `;
+
+  let bottomHtml = '';
+  if(stage === 'pendente'){
+    bottomHtml = `
+      <div class="ride-actions">
+        <button class="accept-btn" data-action="aceita">Aceitar corrida</button>
+        <button class="reject-btn" data-action="recusada">Recusar</button>
+      </div>
+    `;
+  }else if(stage === 'aceita'){
+    bottomHtml = `
+      <span class="ride-status accepted">✓ Aceita · indo buscar</span>
+      ${navBlock('Buscar o passageiro', wazeUrlOrigem, mapsUrlOrigem)}
+      <button class="stage-btn stage-start" data-action="em_viagem">Passageiro embarcou · Iniciar viagem</button>
+    `;
+  }else if(stage === 'em_viagem'){
+    bottomHtml = `
+      <span class="ride-status accepted">🚗 Em viagem</span>
+      ${navBlock('Ir para o destino', wazeUrlDestino, mapsUrlDestino)}
+      <button class="stage-btn stage-finish" data-action="concluida">Chegou no destino · Finalizar corrida</button>
+    `;
+  }else{
+    bottomHtml = `<div>${statusHtml}</div>`;
+  }
 
   card.innerHTML = `
     <div class="ride-top">
@@ -1847,22 +1912,15 @@ function buildRideCard(id, r, isPending){
       <span>${fmtDuration(r.totalSeconds || 0)}</span>
     </div>
     <div class="ride-passenger">${passageiro}</div>
-    ${isPending ? `
-      <div class="ride-actions">
-        <button class="accept-btn" data-action="aceita">Aceitar corrida</button>
-        <button class="reject-btn" data-action="recusada">Recusar</button>
-      </div>
-    ` : `<div>${statusHtml}</div>${r.status === 'aceita' ? navButtonsHtml : ''}`}
+    ${bottomHtml}
   `;
 
-  if(isPending){
-    card.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        db.ref('corridas/' + id).update({ status: btn.dataset.action });
-        // ao aceitar, o card é redesenhado automaticamente (listener em tempo real)
-        // já mostrando os botões "Abrir no Waze / Abrir no Maps" logo abaixo
-      });
+  card.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      db.ref('corridas/' + id).update({ status: btn.dataset.action });
     });
+  });
+  if(stage === 'pendente'){
     setTimeout(() => card.classList.remove('flash'), 3200);
   }
 
