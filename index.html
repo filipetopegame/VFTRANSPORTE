@@ -593,6 +593,225 @@
   .receipt-actions .close-btn:hover{ border-color:var(--ink-soft); }
   .receipt-actions .print-btn:hover{ background:#33302a; }
 
+  /* --- abas passageiro / motorista --- */
+  .view-tabs{
+    display:flex; gap:8px;
+    margin-bottom:18px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;
+    padding:5px;
+  }
+  .view-tab{
+    flex:1;
+    padding:10px;
+    border:none;
+    background:transparent;
+    color:#a8a49a;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .15s, color .15s;
+  }
+  .view-tab svg{ width:15px; height:15px; }
+  .view-tab.active{ background:var(--yellow); color:var(--ink); }
+  .view-tab .badge{
+    background:var(--danger); color:#fff;
+    font-size:10px; font-weight:700;
+    min-width:16px; height:16px; padding:0 4px;
+    border-radius:9px;
+    display:none;
+    align-items:center; justify-content:center;
+  }
+  .view-tab .badge.show{ display:inline-flex; }
+
+  .contact-row{ display:flex; gap:10px; margin-bottom:18px; }
+  .contact-row .field{ flex:1; }
+  .contact-row label{ margin-bottom:5px; }
+  .contact-row input{
+    width:100%; padding:10px 12px; border-radius:9px;
+    border:1.5px solid var(--line); background:#fff;
+    font-family:'Inter',sans-serif; font-size:13.5px; color:var(--ink);
+  }
+  .contact-row input:focus{ outline:none; border-color:var(--yellow); box-shadow:0 0 0 3px rgba(244,196,48,0.25); }
+
+  .request-btn{
+    width:100%; margin-top:14px; padding:14px;
+    border:none; border-radius:10px;
+    background:var(--green); color:#fff;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:14px;
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    cursor:pointer; transition:background .15s, transform .1s;
+  }
+  .request-btn:hover{ background:#336a4f; }
+  .request-btn:active{ transform:scale(0.98); }
+  .request-btn:disabled{ opacity:.55; cursor:default; transform:none; }
+  .request-btn svg{ width:18px; height:18px; }
+
+  /* --- overlay de espera do passageiro --- */
+  .wait-overlay{
+    display:none; position:fixed; inset:0; z-index:1100;
+    background:rgba(32,31,29,0.85);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .wait-overlay.show{ display:flex; }
+  .wait-card{
+    width:100%; max-width:360px;
+    background:var(--paper); border-radius:18px;
+    padding:32px 26px; text-align:center;
+    box-shadow:0 30px 70px rgba(0,0,0,0.5);
+  }
+  .wait-spinner{
+    width:56px; height:56px; margin:0 auto 18px;
+    border-radius:50%;
+    border:4px solid var(--line);
+    border-top-color:var(--yellow);
+    animation:spin 0.9s linear infinite;
+  }
+  .wait-card.accepted .wait-spinner{
+    border:none; background:var(--green-soft);
+    display:flex; align-items:center; justify-content:center;
+    animation:none;
+  }
+  .wait-card.rejected .wait-spinner{
+    border:none; background:#fbe9e4;
+    display:flex; align-items:center; justify-content:center;
+    animation:none;
+  }
+  .wait-title{ font-weight:800; font-size:18px; margin-bottom:6px; }
+  .wait-sub{ font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin-bottom:20px; }
+  .wait-status-tag{
+    display:inline-flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase;
+    padding:7px 13px; border-radius:20px;
+    background:var(--green-soft); color:var(--green);
+    margin-bottom:18px;
+  }
+  .wait-status-tag .pulse{ width:7px;height:7px;border-radius:50%;background:var(--green); animation:pulse 1.1s ease-in-out infinite; }
+  .wait-actions{ display:flex; gap:10px; }
+  .wait-actions button{
+    flex:1; padding:12px; border-radius:9px;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase; cursor:pointer;
+    border:1.5px solid var(--line); background:#fff;
+  }
+  .wait-actions .wait-whats{ background:var(--whats); color:#fff; border-color:var(--whats); }
+  .wait-actions .wait-close{ display:none; }
+  .wait-card.done .wait-actions .wait-close{ display:block; }
+
+  /* --- área do motorista --- */
+  .driver-gate{
+    background:var(--card,var(--paper)); background:var(--paper);
+    border-radius:18px; padding:28px 24px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+    text-align:center;
+  }
+  .driver-gate h2{ font-size:18px; margin:0 0 6px; }
+  .driver-gate p{ font-size:13px; color:var(--ink-soft); margin:0 0 18px; }
+  .driver-gate input{
+    width:100%; padding:12px 13px; border-radius:9px;
+    border:1.5px solid var(--line); text-align:center;
+    font-family:'IBM Plex Mono',monospace; font-size:16px; letter-spacing:.1em;
+    margin-bottom:12px;
+  }
+  .driver-gate button{
+    width:100%; padding:13px; border:none; border-radius:10px;
+    background:var(--ink); color:var(--yellow);
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:13px;
+    letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+  }
+  .driver-gate .gate-err{ color:var(--danger); font-size:12.5px; margin-top:10px; display:none; }
+  .driver-gate .gate-err.show{ display:block; }
+
+  .driver-panel{ display:none; }
+  .driver-panel.show{ display:block; }
+  .driver-toolbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .driver-toolbar .status-line{
+    display:flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700;
+    color:var(--yellow); letter-spacing:.04em; text-transform:uppercase;
+  }
+  .driver-toolbar .status-line .dotlive{ width:7px;height:7px;border-radius:50%; background:var(--green); animation:pulse 1.1s ease-in-out infinite; }
+  .driver-toolbar .sound-toggle{
+    background:transparent; border:1px solid rgba(255,255,255,0.25);
+    color:#a8a49a; border-radius:8px; padding:6px 10px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; cursor:pointer;
+  }
+  .driver-toolbar .sound-toggle.on{ color:var(--yellow); border-color:var(--yellow); }
+
+  .ride-empty{
+    background:var(--paper); border-radius:16px; padding:40px 24px;
+    text-align:center; color:var(--ink-soft); font-size:13.5px;
+  }
+  .ride-card{
+    background:var(--paper); border-radius:16px; padding:18px 20px;
+    margin-bottom:14px; box-shadow:0 12px 30px rgba(0,0,0,0.25);
+    border:2px solid transparent;
+  }
+  .ride-card.flash{ animation:flashRide 1s ease-in-out 3; border-color:var(--yellow); }
+  @keyframes flashRide{
+    0%,100%{ box-shadow:0 12px 30px rgba(0,0,0,0.25); }
+    50%{ box-shadow:0 0 0 6px rgba(244,196,48,0.55), 0 12px 30px rgba(0,0,0,0.25); }
+  }
+  .ride-card .ride-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:10px; gap:10px;
+  }
+  .ride-card .ride-when{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-soft);
+    letter-spacing:.04em; text-transform:uppercase;
+  }
+  .ride-card .ride-val{
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:20px; color:var(--ink);
+    flex:none;
+  }
+  .ride-card .ride-route{ margin-bottom:10px; }
+  .ride-card .ride-stop{
+    display:flex; gap:8px; align-items:flex-start;
+    font-size:13px; padding:3px 0;
+  }
+  .ride-card .ride-stop .r-dot{ width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px; background:var(--ink-soft); }
+  .ride-card .ride-stop.o .r-dot{ background:var(--green); }
+  .ride-card .ride-stop.d .r-dot{ background:var(--yellow); border:1.5px solid var(--ink); }
+  .ride-card .ride-meta{
+    display:flex; gap:14px; flex-wrap:wrap;
+    font-size:12px; color:var(--ink-soft); margin-bottom:12px;
+  }
+  .ride-card .ride-meta strong{ color:var(--ink); }
+  .ride-card .ride-passenger{
+    font-size:12.5px; color:var(--ink-soft); margin-bottom:12px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .ride-card .ride-actions{ display:flex; gap:10px; }
+  .ride-card .ride-actions button{
+    flex:1; padding:12px; border-radius:9px; border:none;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700;
+    letter-spacing:.04em; text-transform:uppercase; cursor:pointer;
+    transition:transform .1s;
+  }
+  .ride-card .ride-actions button:active{ transform:scale(0.97); }
+  .ride-card .accept-btn{ background:var(--green); color:#fff; }
+  .ride-card .reject-btn{ background:transparent; color:var(--danger); border:1.5px solid var(--danger) !important; }
+  .ride-card .ride-status{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase;
+    padding:6px 12px; border-radius:20px;
+  }
+  .ride-card .ride-status.accepted{ background:var(--green-soft); color:var(--green); }
+  .ride-card .ride-status.rejected{ background:#fbe9e4; color:var(--danger); }
+
+  .fb-warning{
+    background:#fbe9e4; color:var(--danger); border-radius:10px;
+    padding:12px 14px; font-size:12.5px; line-height:1.5; margin-bottom:16px;
+  }
+
   @media print{
     body *{ visibility:hidden; }
     #receiptCard, #receiptCard *{ visibility:visible; }
@@ -608,7 +827,31 @@
   <p class="sub">Preencha o trajeto (digitando ou marcando no mapa) para gerar o preço da corrida.</p>
   <div class="driver-tag"><span class="avatar">F</span> Filipe VF Transporte · (21) 99297-6849</div>
 
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabPassageiro" type="button">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Passageiro
+    </button>
+    <button class="view-tab" id="tabMotorista" type="button">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 12l1.5-5A2 2 0 0 1 6.4 5.5h11.2A2 2 0 0 1 19.5 7L21 12v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="15" r="1.4" fill="currentColor"/><circle cx="17" cy="15" r="1.4" fill="currentColor"/></svg>
+      Motorista
+      <span class="badge" id="motoristaBadge">0</span>
+    </button>
+  </div>
+
+  <div id="viewPassageiro">
+
   <div class="card">
+    <div class="contact-row">
+      <div class="field">
+        <label for="passNome">Seu nome (opcional)</label>
+        <input type="text" id="passNome" placeholder="Ex: Maria">
+      </div>
+      <div class="field">
+        <label for="passTel">Seu WhatsApp (opcional)</label>
+        <input type="text" id="passTel" placeholder="Ex: 21999998888">
+      </div>
+    </div>
     <div class="route" id="route">
       <div class="track"></div>
 
@@ -712,9 +955,13 @@
         </div>
         <div class="pix-note">Chave Pix (telefone) de Filipe VF Transporte. Envie o comprovante pelo WhatsApp para confirmar o agendamento.</div>
       </div>
+      <button class="request-btn" id="requestBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12l1.5-5A2 2 0 0 1 6.4 5.5h11.2A2 2 0 0 1 19.5 7L21 12v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="15" r="1.4" fill="#fff"/><circle cx="17" cy="15" r="1.4" fill="#fff"/></svg>
+        Solicitar corrida agora
+      </button>
       <button class="whats-btn" id="whatsBtn" type="button">
         <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.47 14.38c-.29-.15-1.7-.84-1.97-.93-.26-.1-.46-.15-.65.14-.2.3-.75.93-.92 1.12-.17.2-.34.22-.63.08-.29-.15-1.22-.45-2.33-1.44-.86-.77-1.44-1.72-1.6-2.02-.17-.3-.02-.46.13-.6.13-.13.29-.34.44-.51.15-.17.2-.3.29-.5.1-.2.05-.37-.02-.51-.08-.15-.65-1.58-.9-2.16-.24-.58-.48-.5-.65-.5-.17-.01-.37-.01-.56-.01-.2 0-.51.07-.78.37-.26.3-1.02 1-1.02 2.43 0 1.43 1.05 2.82 1.2 3.01.15.2 2.06 3.16 5 4.43.7.3 1.24.48 1.67.62.7.22 1.34.19 1.84.11.56-.08 1.7-.7 1.95-1.36.24-.67.24-1.24.17-1.36-.07-.12-.26-.2-.55-.34z"/><path d="M12.02 2C6.5 2 2.02 6.48 2.02 12c0 1.85.5 3.58 1.36 5.07L2 22l5.08-1.33A9.96 9.96 0 0 0 12.02 22C17.55 22 22 17.52 22 12S17.55 2 12.02 2zm0 18.2c-1.62 0-3.13-.46-4.4-1.26l-.32-.19-3.02.79.8-2.94-.2-.32A8.18 8.18 0 0 1 3.82 12c0-4.53 3.68-8.2 8.2-8.2 4.52 0 8.2 3.67 8.2 8.2 0 4.52-3.68 8.2-8.2 8.2z"/></svg>
-        Enviar para Filipe VF Transporte (WhatsApp)
+        Enviar direto no WhatsApp (sem fila)
       </button>
       <button class="receipt-btn" id="receiptBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2z" stroke="#232019" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 7h7M8.5 10.5h7M8.5 14h4" stroke="#232019" stroke-width="1.6" stroke-linecap="round"/></svg>
@@ -724,6 +971,42 @@
   </div>
 
   <div class="footnote">Distâncias calculadas por rota de carro via OpenStreetMap (OSRM).<br>Motorista: Filipe · <span class="phone">(21) 99297-6849</span></div>
+  </div><!-- /viewPassageiro -->
+
+  <div id="viewMotorista" style="display:none;">
+    <div id="fbWarning" class="fb-warning" style="display:none;">
+      ⚠️ O Firebase ainda não foi configurado neste arquivo (chave <code>firebaseConfig</code>). Sem isso, os pedidos de corrida não sincronizam entre o passageiro e o motorista. Veja as instruções no comentário do código.
+    </div>
+    <div class="driver-gate" id="driverGate">
+      <h2>Área do motorista</h2>
+      <p>Digite a senha para ver os pedidos de corrida.</p>
+      <input type="password" id="driverPass" placeholder="Senha" inputmode="numeric">
+      <button type="button" id="driverGateBtn">Entrar</button>
+      <div class="gate-err" id="driverGateErr">Senha incorreta.</div>
+    </div>
+    <div class="driver-panel" id="driverPanel">
+      <div class="driver-toolbar">
+        <div class="status-line"><span class="dotlive"></span> Recebendo pedidos em tempo real</div>
+        <button class="sound-toggle on" id="soundToggle" type="button">🔔 Som ligado</button>
+      </div>
+      <div id="rideList"></div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<div class="wait-overlay" id="waitOverlay">
+  <div class="wait-card" id="waitCard">
+    <div class="wait-spinner" id="waitSpinner"></div>
+    <div class="wait-title" id="waitTitle">Procurando motorista...</div>
+    <div class="wait-sub" id="waitSub">Seu pedido foi enviado. Assim que o motorista aceitar, você verá a confirmação aqui.</div>
+    <div class="wait-status-tag" id="waitTag"><span class="pulse"></span> Aguardando resposta</div>
+    <div class="wait-actions">
+      <button type="button" id="waitCancelBtn">Cancelar pedido</button>
+      <button type="button" class="wait-whats" id="waitWhatsBtn" style="display:none;">Chamar no WhatsApp</button>
+      <button type="button" class="wait-close" id="waitCloseBtn">Fechar</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="receiptOverlay">
@@ -755,6 +1038,63 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<!-- ================================================================
+     FIREBASE — fila de corridas em tempo real (passageiro ⇄ motorista)
+     ================================================================
+     Passo a passo pra ativar (leva ~5 min, é grátis):
+     1. Acesse https://console.firebase.google.com e crie um projeto novo.
+     2. No menu lateral, vá em "Realtime Database" → "Criar banco de dados"
+        → escolha a região e comece em "modo de teste" (dá pra travar
+        depois com as regras aí embaixo).
+     3. Ainda no console, vá em ⚙️ "Configurações do projeto" → role até
+        "Seus apps" → clique no ícone "</>" (Web) → registre um app
+        (não precisa de Hosting) → copie o objeto "firebaseConfig".
+     4. Cole o objeto copiado no lugar do FIREBASE_CONFIG_PLACEHOLDER
+        logo abaixo.
+     5. (Recomendado) Em "Realtime Database" → aba "Regras", cole:
+        {
+          "rules": {
+            "corridas": {
+              ".read": true,
+              ".write": true
+            }
+          }
+        }
+        Isso é simples e funcional pra uso pessoal/pequeno. Se quiser
+        mais segurança depois (ex: exigir senha do motorista pra
+        aceitar/recusar), me chama que ajusto as regras.
+     6. Troque DRIVER_PASSWORD abaixo pela senha que só você vai saber.
+     ================================================================ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+// ⬇️ Cole aqui o firebaseConfig copiado do console do Firebase
+const FIREBASE_CONFIG_PLACEHOLDER = {
+  apiKey: "AIzaSyB660bCq6KKIUSrxzVDuwOWRtbh3_pZwVM",
+  authDomain: "vf-transporte.firebaseapp.com",
+  databaseURL: "https://vf-transporte-default-rtdb.firebaseio.com",
+  projectId: "vf-transporte",
+  storageBucket: "vf-transporte.firebasestorage.app",
+  messagingSenderId: "625643347321",
+  appId: "1:625643347321:web:29a32f17ade9dfc555a3a8"
+};
+
+const DRIVER_PASSWORD = '97035855'; // troque por uma senha sua
+
+let fbReady = false;
+let db = null;
+try{
+  if(FIREBASE_CONFIG_PLACEHOLDER.apiKey !== 'COLE_AQUI'){
+    firebase.initializeApp(FIREBASE_CONFIG_PLACEHOLDER);
+    db = firebase.database();
+    fbReady = true;
+  }
+}catch(e){
+  console.warn('Firebase não inicializado:', e);
+}
+</script>
+
 <script>
 let waypointCount = 0;
 const PRECO_KM = 2.00; // valor por km fixo, já incluso no sistema
@@ -1201,6 +1541,290 @@ document.getElementById('receiptOverlay').addEventListener('click', (e) => {
 document.getElementById('receiptPrintBtn').addEventListener('click', () => {
   window.print();
 });
+
+// =====================================================================
+// ABAS: passageiro / motorista
+// =====================================================================
+const tabPassageiro = document.getElementById('tabPassageiro');
+const tabMotorista = document.getElementById('tabMotorista');
+const viewPassageiro = document.getElementById('viewPassageiro');
+const viewMotorista = document.getElementById('viewMotorista');
+
+function showView(view){
+  const isMotorista = view === 'motorista';
+  tabMotorista.classList.toggle('active', isMotorista);
+  tabPassageiro.classList.toggle('active', !isMotorista);
+  viewMotorista.style.display = isMotorista ? 'block' : 'none';
+  viewPassageiro.style.display = isMotorista ? 'none' : 'block';
+  if(isMotorista){
+    document.getElementById('fbWarning').style.display = fbReady ? 'none' : 'block';
+    if(driverUnlocked) startRideListener();
+  }
+}
+tabPassageiro.addEventListener('click', () => showView('passageiro'));
+tabMotorista.addEventListener('click', () => showView('motorista'));
+
+// =====================================================================
+// PASSAGEIRO: solicitar corrida e tela de espera
+// =====================================================================
+const waitOverlay = document.getElementById('waitOverlay');
+const waitCard = document.getElementById('waitCard');
+const waitTitle = document.getElementById('waitTitle');
+const waitSub = document.getElementById('waitSub');
+const waitTag = document.getElementById('waitTag');
+const waitWhatsBtn = document.getElementById('waitWhatsBtn');
+const waitCancelBtn = document.getElementById('waitCancelBtn');
+const waitCloseBtn = document.getElementById('waitCloseBtn');
+
+let currentRideId = null;
+let currentRideRef = null;
+
+document.getElementById('requestBtn').addEventListener('click', () => {
+  if(!lastResult){
+    showMsg('Calcule o valor da viagem antes de solicitar a corrida.');
+    return;
+  }
+  if(!fbReady){
+    showMsg('A fila de corridas em tempo real ainda não foi configurada neste arquivo. Use o botão "Enviar direto no WhatsApp" por enquanto, ou peça pra configurar o Firebase.');
+    return;
+  }
+  const r = lastResult;
+  const nome = document.getElementById('passNome').value.trim();
+  const tel = document.getElementById('passTel').value.trim();
+
+  const rideData = {
+    origem: r.origemVal,
+    destino: r.destinoVal,
+    paradas: r.waypointData.map(w => w.text),
+    totalKm: r.totalKm,
+    totalValor: r.totalValor,
+    totalSeconds: r.totalSeconds || 0,
+    idaVolta: !!r.idaVolta,
+    precoVal: r.precoVal,
+    agendaData: r.agendaData || '',
+    agendaHora: r.agendaHora || '',
+    passageiroNome: nome || '',
+    passageiroTel: tel || '',
+    status: 'pendente',
+    criadoEm: Date.now()
+  };
+
+  const btn = document.getElementById('requestBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  db.ref('corridas').push(rideData).then((ref) => {
+    currentRideId = ref.key;
+    currentRideRef = ref;
+    openWaitOverlay(rideData);
+    listenToRideStatus(ref);
+  }).catch((err) => {
+    showMsg('Não foi possível enviar o pedido: ' + err.message);
+  }).finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M3 12l1.5-5A2 2 0 0 1 6.4 5.5h11.2A2 2 0 0 1 19.5 7L21 12v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><circle cx="7" cy="15" r="1.4" fill="#fff"/><circle cx="17" cy="15" r="1.4" fill="#fff"/></svg> Solicitar corrida agora';
+  });
+});
+
+function openWaitOverlay(rideData){
+  waitCard.className = 'wait-card';
+  waitTitle.textContent = 'Procurando motorista...';
+  waitSub.textContent = 'Seu pedido foi enviado. Assim que o motorista aceitar, você verá a confirmação aqui.';
+  waitTag.innerHTML = '<span class="pulse"></span> Aguardando resposta';
+  waitTag.style.background = '';
+  waitTag.style.color = '';
+  waitWhatsBtn.style.display = 'none';
+  waitCancelBtn.style.display = 'block';
+  waitOverlay.classList.add('show');
+}
+
+function listenToRideStatus(ref){
+  ref.on('value', (snap) => {
+    const data = snap.val();
+    if(!data) return;
+    if(data.status === 'aceita'){
+      waitCard.className = 'wait-card accepted done';
+      waitTitle.textContent = 'Corrida aceita! 🚗';
+      waitSub.textContent = 'Filipe VF Transporte confirmou sua corrida e está a caminho. Combine os detalhes finais pelo WhatsApp.';
+      waitTag.innerHTML = '✓ Motorista a caminho';
+      waitCancelBtn.style.display = 'none';
+      waitWhatsBtn.style.display = 'block';
+      ref.off('value');
+    }else if(data.status === 'recusada'){
+      waitCard.className = 'wait-card rejected done';
+      waitTitle.textContent = 'Não foi possível aceitar';
+      waitSub.textContent = 'O motorista não conseguiu aceitar essa corrida agora. Tente novamente ou chame direto no WhatsApp.';
+      waitTag.innerHTML = 'Corrida recusada';
+      waitCancelBtn.style.display = 'none';
+      waitWhatsBtn.style.display = 'block';
+      ref.off('value');
+    }
+  });
+}
+
+waitWhatsBtn.addEventListener('click', () => {
+  document.getElementById('whatsBtn').click();
+});
+waitCancelBtn.addEventListener('click', () => {
+  if(currentRideRef){
+    currentRideRef.update({ status: 'cancelada' });
+    currentRideRef.off('value');
+  }
+  waitOverlay.classList.remove('show');
+});
+waitCloseBtn.addEventListener('click', () => {
+  waitOverlay.classList.remove('show');
+});
+
+// =====================================================================
+// MOTORISTA: senha, lista de pedidos em tempo real, som + vibração
+// =====================================================================
+let driverUnlocked = false;
+let soundOn = true;
+let knownRideIds = new Set();
+let firstLoadDone = false;
+
+document.getElementById('driverGateBtn').addEventListener('click', unlockDriver);
+document.getElementById('driverPass').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') unlockDriver();
+});
+
+function unlockDriver(){
+  const val = document.getElementById('driverPass').value;
+  const err = document.getElementById('driverGateErr');
+  if(val === DRIVER_PASSWORD){
+    driverUnlocked = true;
+    document.getElementById('driverGate').style.display = 'none';
+    document.getElementById('driverPanel').classList.add('show');
+    err.classList.remove('show');
+    startRideListener();
+  }else{
+    err.classList.add('show');
+  }
+}
+
+document.getElementById('soundToggle').addEventListener('click', function(){
+  soundOn = !soundOn;
+  this.classList.toggle('on', soundOn);
+  this.textContent = soundOn ? '🔔 Som ligado' : '🔕 Som desligado';
+});
+
+function playAlertSound(){
+  if(!soundOn) return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [0, 0.22, 0.44].forEach((t) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now + t);
+      gain.gain.setValueAtTime(0, now + t);
+      gain.gain.linearRampToValueAtTime(0.35, now + t + 0.02);
+      gain.gain.linearRampToValueAtTime(0, now + t + 0.18);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + t);
+      osc.stop(now + t + 0.2);
+    });
+  }catch(e){ /* navegador sem suporte a Web Audio */ }
+  if(navigator.vibrate){ navigator.vibrate([250, 120, 250, 120, 250]); }
+}
+
+let rideListenerStarted = false;
+function startRideListener(){
+  if(rideListenerStarted || !fbReady) return;
+  rideListenerStarted = true;
+  db.ref('corridas').orderByChild('criadoEm').on('value', (snap) => {
+    const data = snap.val() || {};
+    renderRides(data);
+  });
+}
+
+function fmtWhen(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function renderRides(data){
+  const entries = Object.entries(data).sort((a,b) => (b[1].criadoEm||0) - (a[1].criadoEm||0));
+  const pendentes = entries.filter(([id, r]) => r.status === 'pendente');
+  const outras = entries.filter(([id, r]) => r.status !== 'pendente').slice(0, 5);
+
+  document.getElementById('motoristaBadge').textContent = pendentes.length;
+  document.getElementById('motoristaBadge').classList.toggle('show', pendentes.length > 0);
+
+  // detecta pedidos novos pra tocar som/vibrar
+  if(firstLoadDone){
+    pendentes.forEach(([id]) => {
+      if(!knownRideIds.has(id)) playAlertSound();
+    });
+  }
+  knownRideIds = new Set(entries.map(([id]) => id));
+  firstLoadDone = true;
+
+  const list = document.getElementById('rideList');
+  list.innerHTML = '';
+
+  if(pendentes.length === 0 && outras.length === 0){
+    list.innerHTML = '<div class="ride-empty">Nenhum pedido de corrida ainda. Assim que um passageiro solicitar, vai aparecer aqui na hora.</div>';
+    return;
+  }
+
+  pendentes.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, true)));
+  outras.forEach(([id, r]) => list.appendChild(buildRideCard(id, r, false)));
+}
+
+function buildRideCard(id, r, isPending){
+  const card = document.createElement('div');
+  card.className = 'ride-card' + (isPending ? ' flash' : '');
+  card.dataset.rideId = id;
+
+  const paradasHtml = (r.paradas || []).map(p => `<div class="ride-stop"><span class="r-dot"></span><span>${p}</span></div>`).join('');
+  const agenda = r.agendaData ? fmtAgendaDate(r.agendaData, r.agendaHora) : '';
+  const passageiro = (r.passageiroNome || r.passageiroTel)
+    ? `👤 ${r.passageiroNome || 'Passageiro'}${r.passageiroTel ? ' · ' + r.passageiroTel : ''}`
+    : '👤 Passageiro não informou nome/telefone';
+
+  let statusHtml = '';
+  if(r.status === 'aceita') statusHtml = '<span class="ride-status accepted">✓ Aceita</span>';
+  else if(r.status === 'recusada') statusHtml = '<span class="ride-status rejected">Recusada</span>';
+  else if(r.status === 'cancelada') statusHtml = '<span class="ride-status rejected">Cancelada pelo passageiro</span>';
+
+  card.innerHTML = `
+    <div class="ride-top">
+      <div class="ride-when">${fmtWhen(r.criadoEm)}${agenda ? ' · agendada p/ ' + agenda : ''}</div>
+      <div class="ride-val">${fmtBRL(r.totalValor || 0)}</div>
+    </div>
+    <div class="ride-route">
+      <div class="ride-stop o"><span class="r-dot"></span><span>${r.origem || ''}</span></div>
+      ${paradasHtml}
+      <div class="ride-stop d"><span class="r-dot"></span><span>${r.destino || ''}</span></div>
+    </div>
+    <div class="ride-meta">
+      <span><strong>${fmtKm(r.totalKm || 0)}</strong>${r.idaVolta ? ' (ida e volta)' : ''}</span>
+      <span>${fmtDuration(r.totalSeconds || 0)}</span>
+    </div>
+    <div class="ride-passenger">${passageiro}</div>
+    ${isPending ? `
+      <div class="ride-actions">
+        <button class="accept-btn" data-action="aceita">Aceitar corrida</button>
+        <button class="reject-btn" data-action="recusada">Recusar</button>
+      </div>
+    ` : `<div>${statusHtml}</div>`}
+  `;
+
+  if(isPending){
+    card.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        db.ref('corridas/' + id).update({ status: btn.dataset.action });
+      });
+    });
+    setTimeout(() => card.classList.remove('flash'), 3200);
+  }
+
+  return card;
+}
 </script>
 </body>
 </html>
