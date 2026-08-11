@@ -806,6 +806,17 @@
   }
   .ride-card .ride-status.accepted{ background:var(--green-soft); color:var(--green); }
   .ride-card .ride-status.rejected{ background:#fbe9e4; color:var(--danger); }
+  .nav-buttons{ display:flex; gap:10px; margin-top:12px; }
+  .nav-buttons button{
+    flex:1; padding:12px; border-radius:9px; border:none;
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    cursor:pointer; transition:transform .1s;
+  }
+  .nav-buttons button:active{ transform:scale(0.97); }
+  .nav-buttons .waze-btn{ background:#33CCFF; color:#1a1a2e; }
+  .nav-buttons .maps-btn{ background:#4285F4; color:#fff; }
+  .nav-buttons svg{ width:17px; height:17px; }
 
   .fb-warning{
     background:#fbe9e4; color:var(--danger); border-radius:10px;
@@ -1080,7 +1091,7 @@ const FIREBASE_CONFIG_PLACEHOLDER = {
   appId: "1:625643347321:web:29a32f17ade9dfc555a3a8"
 };
 
-const DRIVER_PASSWORD = '97035855'; // troque por uma senha sua
+const DRIVER_PASSWORD = '1234'; // troque por uma senha sua
 
 let fbReady = false;
 let db = null;
@@ -1404,7 +1415,13 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
     document.getElementById('timeTotal').innerHTML = 'Tempo estimado de viagem: <strong>' + fmtDuration(totalSeconds) + '</strong>';
     document.getElementById('result').classList.add('show');
 
-    lastResult = { origemVal, destinoVal, waypointData, totalKm, totalValor, idaVolta, precoVal, legLabels, legsKm, totalSeconds, agendaData: document.getElementById('agendaData').value, agendaHora: document.getElementById('agendaHora').value };
+    lastResult = {
+      origemVal, destinoVal, waypointData, totalKm, totalValor, idaVolta, precoVal, legLabels, legsKm, totalSeconds,
+      agendaData: document.getElementById('agendaData').value,
+      agendaHora: document.getElementById('agendaHora').value,
+      origemLat: geocoded[0].lat, origemLon: geocoded[0].lon,
+      destinoLat: geocoded[geocoded.length-1].lat, destinoLon: geocoded[geocoded.length-1].lon
+    };
 
     // ajusta o mapa para mostrar toda a rota
     const bounds = L.latLngBounds(geocoded.map(p => [p.lat, p.lon]));
@@ -1595,6 +1612,10 @@ document.getElementById('requestBtn').addEventListener('click', () => {
   const rideData = {
     origem: r.origemVal,
     destino: r.destinoVal,
+    origemLat: r.origemLat,
+    origemLon: r.origemLon,
+    destinoLat: r.destinoLat,
+    destinoLon: r.destinoLon,
     paradas: r.waypointData.map(w => w.text),
     totalKm: r.totalKm,
     totalValor: r.totalValor,
@@ -1791,6 +1812,26 @@ function buildRideCard(id, r, isPending){
   else if(r.status === 'recusada') statusHtml = '<span class="ride-status rejected">Recusada</span>';
   else if(r.status === 'cancelada') statusHtml = '<span class="ride-status rejected">Cancelada pelo passageiro</span>';
 
+  const hasCoords = typeof r.origemLat === 'number' && typeof r.origemLon === 'number';
+  const wazeUrl = hasCoords
+    ? `https://waze.com/ul?ll=${r.origemLat},${r.origemLon}&navigate=yes`
+    : `https://waze.com/ul?q=${encodeURIComponent(r.origem || '')}&navigate=yes`;
+  const mapsUrl = hasCoords
+    ? `https://www.google.com/maps/dir/?api=1&destination=${r.origemLat},${r.origemLon}&travelmode=driving`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(r.origem || '')}&travelmode=driving`;
+  const navButtonsHtml = `
+    <div class="nav-buttons">
+      <button class="waze-btn" type="button" onclick="window.open('${wazeUrl}', '_blank')">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><path d="M8.5 14.5c1 1 5 1 6 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Abrir no Waze
+      </button>
+      <button class="maps-btn" type="button" onclick="window.open('${mapsUrl}', '_blank')">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-13A7 7 0 0 0 5 9c0 5.42 7 13 7 13z" fill="currentColor"/><circle cx="12" cy="9" r="2.4" fill="#fff"/></svg>
+        Abrir no Maps
+      </button>
+    </div>
+  `;
+
   card.innerHTML = `
     <div class="ride-top">
       <div class="ride-when">${fmtWhen(r.criadoEm)}${agenda ? ' · agendada p/ ' + agenda : ''}</div>
@@ -1811,13 +1852,15 @@ function buildRideCard(id, r, isPending){
         <button class="accept-btn" data-action="aceita">Aceitar corrida</button>
         <button class="reject-btn" data-action="recusada">Recusar</button>
       </div>
-    ` : `<div>${statusHtml}</div>`}
+    ` : `<div>${statusHtml}</div>${r.status === 'aceita' ? navButtonsHtml : ''}`}
   `;
 
   if(isPending){
     card.querySelectorAll('[data-action]').forEach(btn => {
       btn.addEventListener('click', () => {
         db.ref('corridas/' + id).update({ status: btn.dataset.action });
+        // ao aceitar, o card é redesenhado automaticamente (listener em tempo real)
+        // já mostrando os botões "Abrir no Waze / Abrir no Maps" logo abaixo
       });
     });
     setTimeout(() => card.classList.remove('flash'), 3200);
