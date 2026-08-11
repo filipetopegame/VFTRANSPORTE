@@ -731,13 +731,13 @@ map.on('click', async (e) => {
 // ----- localização atual do passageiro -----
 let userMarker = null;
 
-document.getElementById('locateBtn').addEventListener('click', () => {
+function locateUser(auto){
   const btn = document.getElementById('locateBtn');
   const hint = document.getElementById('locateHint');
   hint.style.display = 'block';
 
   if(!navigator.geolocation){
-    hint.textContent = 'Seu navegador não suporta localização automática. Marque o ponto no mapa.';
+    if(!auto) hint.textContent = 'Seu navegador não suporta localização automática. Marque o ponto no mapa.';
     return;
   }
 
@@ -747,7 +747,9 @@ document.getElementById('locateBtn').addEventListener('click', () => {
   }
 
   btn.classList.add('loading');
-  hint.textContent = 'Buscando sua localização... (seu navegador vai pedir permissão, toque em "Permitir")';
+  hint.textContent = auto
+    ? 'Detectando sua localização automaticamente... (toque em "Permitir" se o navegador pedir)'
+    : 'Buscando sua localização... (seu navegador vai pedir permissão, toque em "Permitir")';
 
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const { latitude, longitude } = pos.coords;
@@ -770,15 +772,24 @@ document.getElementById('locateBtn').addEventListener('click', () => {
       hint.textContent = 'Sua posição foi marcada no mapa, mas não foi possível identificar o endereço automaticamente. Você pode digitar o endereço de partida manualmente.';
     }
 
-    document.getElementById('map').scrollIntoView({ behavior:'smooth', block:'center' });
+    if(!auto) document.getElementById('map').scrollIntoView({ behavior:'smooth', block:'center' });
   }, (err) => {
     btn.classList.remove('loading');
     let msg = 'Não foi possível obter sua localização (erro: ' + err.code + ' - ' + err.message + ').';
-    if(err.code === 1) msg = 'Permissão de localização negada. Verifique o ícone de cadeado/localização na barra de endereço do navegador, permita o acesso e tente novamente. Ou marque o ponto no mapa.';
+    if(err.code === 1) msg = auto
+      ? 'Localização automática não permitida. Toque no botão de localização ao lado do endereço de partida para tentar de novo, ou marque o ponto no mapa.'
+      : 'Permissão de localização negada. Verifique o ícone de cadeado/localização na barra de endereço do navegador, permita o acesso e tente novamente. Ou marque o ponto no mapa.';
     else if(err.code === 2) msg = 'Localização indisponível no momento (GPS/rede sem sinal). Tente novamente ao ar livre ou marque o ponto no mapa.';
     else if(err.code === 3) msg = 'Tempo esgotado ao buscar sua localização. Tente novamente ou marque o ponto no mapa.';
     hint.textContent = msg;
   }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+}
+
+document.getElementById('locateBtn').addEventListener('click', () => locateUser(false));
+
+// tenta detectar a localização automaticamente assim que a página carrega
+window.addEventListener('load', () => {
+  setTimeout(() => locateUser(true), 400);
 });
 
 document.getElementById('route').addEventListener('click', (e) => {
